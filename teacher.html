@@ -453,8 +453,9 @@ const VAGUE = ["그냥","느낌","감으로","감이","몰라","모르","아무"
 /* ============================ 상태 ============================ */
 let S = null, store = null, selected = null, openStock = null, toastT = null, snapshot = null, peek = false, joined = {};
 
-// 시드머니 = 퀴즈 점수(0~100) × 10,000원. 10문제면 정답 1개에 10만 원, 다 맞히면 100만 원.
-const SEED = score => Math.round(score*10000);
+// 시드머니 = 기본 50만 원 + 퀴즈 점수(0~100) × 5,000원. 10문제면 정답 1개에 5만 원, 다 맞히면 100만 원.
+const SEED_BASE = 500000, SEED_PER_POINT = 5000;
+const SEED = score => SEED_BASE + Math.round(score*SEED_PER_POINT);
 function freshStudent(id, name, score){
   const seed = SEED(score);
   return { id, name, score, seed, cash:seed, hold:Object.fromEntries(SK.map(k=>[k,0])),
@@ -681,7 +682,7 @@ function viewSetup(){
   return `<div class="wrap"><div class="setup">
     <h2>계좌 개설</h2>
     <p class="lede">퀴즈를 열면 학생들이 휴대폰으로 풀고, 끝나면 이름과 점수가 여기에 자동으로 채워집니다. 직접 입력해도 됩니다.</p>
-    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점 = 시드머니 ${won(SEED(Math.round(100/(qzDone[0].quizN||10))))}원</p>`:""}
+    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점 = 시드머니 +${won(Math.round(100/(qzDone[0].quizN||10))*SEED_PER_POINT)}원</p>`:""}
     ${rows || `<p class="empty">학생을 추가하세요.</p>`}
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
@@ -691,9 +692,8 @@ function viewSetup(){
       <button class="tbtn" data-a="logout">로그아웃</button>
     </div>
     <div class="formula">
-      <strong>시드머니 = 퀴즈 점수 × 10,000원</strong> · 10문제면 정답 1개에 10만 원, 다 맞히면 100만 원<br>
-      순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
-      0점이면 시드머니가 0원이라 거래할 수 없으니, 그럴 때는 점수를 직접 고쳐 주세요.
+      <strong>시드머니 = 500,000원 + (퀴즈 점수 × 5,000원)</strong> · 10문제면 정답 1개에 5만 원, 다 맞히면 100만 원<br>
+      0점이어도 50만 원은 보장됩니다. 순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
     </div>
     <div class="formula" style="background:var(--navy-wash);border-color:var(--navy-soft)">
       수수료 0.5% · 정보는 라운드당 1인 1건 · 주주총회는 4라운드 종료 후 · 기준금리 충격은 5라운드
@@ -1622,7 +1622,7 @@ function viewQuiz(){
       <button class="tbtn primary qz-big" data-a="qback">계좌 개설로 →</button></div>
     <div class="card"><div class="bd">
       <p style="font-size:1.4rem;font-weight:700">${ps.length}명 참여 · 평균 ${avg.toFixed(1)}개 정답 <span style="color:var(--ink-faint);font-weight:500">(${asked}문제)</span></p>
-      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 정답 1개 = 시드머니 ${won(SEED(Math.round(100/asked)))}원.</p>
+      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 시드머니는 기본 ${won(SEED_BASE)}원 + 정답 1개당 ${won(Math.round(100/asked)*SEED_PER_POINT)}원.</p>
     </div></div>
     <div class="card"><header><h3>문제별 정답률</h3></header><div class="bd">${rates}</div></div>
   </div></div>`;
