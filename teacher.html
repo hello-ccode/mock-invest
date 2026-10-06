@@ -1,0 +1,1241 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한빛증권 모의투자 — 교사용</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+
+<style>
+:root{
+  --paper:#FFFFFF; --surface:#F2F5F9; --surface-2:#E7ECF3; --raise:#FFFFFF;
+  --line:#D3DBE6; --line-strong:#AEBCCD;
+  --ink:#14181F; --ink-soft:#48505F; --ink-faint:#6E7889;
+  --navy:#1E3A5F; --navy-soft:#35577F; --navy-wash:#EAF0F7;
+  --rise:#D0342C; --rise-wash:#FCEEEC;
+  --fall:#1462B8; --fall-wash:#EAF1FA;
+  --amber:#8A5A00; --amber-wash:#F7EFDF;
+  --shadow:0 1px 2px rgba(20,24,31,.06),0 10px 28px -14px rgba(20,24,31,.22);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1319; --surface:#161D26; --surface-2:#1F2833; --raise:#1A222C;
+    --line:#2B3643; --line-strong:#3E4C5C;
+    --ink:#E5EAF1; --ink-soft:#A5B0C0; --ink-faint:#7E8998;
+    --navy:#84ACDF; --navy-soft:#628CBF; --navy-wash:#16212E;
+    --rise:#FF6F60; --rise-wash:#2A1714;
+    --fall:#5CACF7; --fall-wash:#11202E;
+    --amber:#DBA648; --amber-wash:#241E12;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1319; --surface:#161D26; --surface-2:#1F2833; --raise:#1A222C;
+  --line:#2B3643; --line-strong:#3E4C5C;
+  --ink:#E5EAF1; --ink-soft:#A5B0C0; --ink-faint:#7E8998;
+  --navy:#84ACDF; --navy-soft:#628CBF; --navy-wash:#16212E;
+  --rise:#FF6F60; --rise-wash:#2A1714;
+  --fall:#5CACF7; --fall-wash:#11202E;
+  --amber:#DBA648; --amber-wash:#241E12;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
+p{margin:0} ul,ol{margin:0;padding-left:1.1em}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+input,select{font:inherit;color:inherit}
+.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.rise{color:var(--rise)} .fall{color:var(--fall)} .flat{color:var(--ink-faint)}
+.hide{display:none!important}
+
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px}
+
+/* ---- top bar ---- */
+.top{
+  position:sticky;top:0;z-index:40;background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.top .wrap{display:flex;align-items:center;gap:16px;height:58px}
+.brand{font-family:"Gowun Batang",serif;font-size:1.16rem;font-weight:700;white-space:nowrap}
+.brand span{color:var(--navy)}
+.roundchip{
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9rem;
+  background:var(--navy);color:var(--paper);padding:.2em .7em;border-radius:5px;white-space:nowrap;
+}
+:root[data-theme="dark"] .roundchip,
+:root:not([data-theme="light"]) .roundchip{color:#0E1319}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .roundchip{color:#fff}}
+.phasechip{
+  font-size:.82rem;font-weight:600;padding:.2em .6em;border-radius:4px;
+  border:1px solid var(--line-strong);color:var(--ink-soft);white-space:nowrap;
+}
+.spacer{flex:1}
+.tbtn{
+  background:var(--surface);border:1px solid var(--line-strong);color:var(--ink);
+  padding:.4em .85em;border-radius:6px;font-size:.86rem;font-weight:500;white-space:nowrap;
+}
+.tbtn:hover{background:var(--surface-2)}
+.tbtn.danger{color:var(--rise);border-color:var(--rise)}
+.tbtn.primary{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+:root[data-theme="dark"] .tbtn.primary,
+:root:not([data-theme="light"]) .tbtn.primary{color:#0E1319}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .tbtn.primary{color:#fff}}
+.tbtn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ---- ticker board ---- */
+.board{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:var(--line);border-bottom:1px solid var(--line);
+}
+.tick{background:var(--paper);padding:12px 14px 13px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tick .nm{font-size:.92rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tick .sec{font-size:.72rem;color:var(--ink-faint);letter-spacing:.03em}
+.tick .px{font-family:"IBM Plex Mono",monospace;font-size:1.72rem;font-weight:600;line-height:1.15;letter-spacing:-.02em}
+.tick .dt{font-family:"IBM Plex Mono",monospace;font-size:.9rem;font-weight:600}
+.tick.up{background:var(--rise-wash)} .tick.dn{background:var(--fall-wash)}
+
+/* ---- layout ---- */
+.cols{display:grid;grid-template-columns:1fr 400px;gap:22px;padding:22px 0 60px;align-items:start}
+@media (max-width:1080px){.cols{grid-template-columns:1fr}}
+
+.card{background:var(--raise);border:1px solid var(--line);border-radius:10px}
+.card>header{
+  padding:11px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.card>header h3{font-size:.98rem}
+.card>.bd{padding:16px}
+
+.newsbar{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:13px 16px;margin-bottom:18px;
+}
+.newsbar.shock{background:var(--rise-wash);border-color:var(--rise)}
+.newsbar .lbl{
+  font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:600;letter-spacing:.1em;
+  color:var(--ink-faint);border:1px solid var(--line-strong);padding:.15em .5em;border-radius:3px;
+  white-space:nowrap;margin-top:2px;
+}
+.newsbar.shock .lbl{color:var(--rise);border-color:var(--rise)}
+.newsbar .tx{font-size:1.02rem;font-weight:500}
+.newsbar .sub{font-size:.84rem;color:var(--ink-faint);margin-top:2px}
+
+/* student grid */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+.scard{
+  background:var(--raise);border:1px solid var(--line);border-radius:9px;
+  padding:12px 13px;text-align:left;display:flex;flex-direction:column;gap:5px;
+  transition:border-color .12s,box-shadow .12s;
+}
+.scard:hover{border-color:var(--navy-soft)}
+.scard.sel{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy-wash)}
+.scard .nm{font-weight:600;font-size:1rem}
+.scard .tot{font-family:"IBM Plex Mono",monospace;font-size:1.16rem;font-weight:600;letter-spacing:-.01em}
+.scard .ret{font-family:"IBM Plex Mono",monospace;font-size:.88rem;font-weight:600}
+.scard .hold{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;min-height:18px}
+.hbadge{
+  font-size:.66rem;font-weight:600;padding:.1em .4em;border-radius:3px;
+  background:var(--surface-2);color:var(--ink-soft);white-space:nowrap;
+}
+.scard .loan{font-size:.7rem;color:var(--amber);font-weight:600}
+
+/* trade panel */
+.trow{border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.thead{
+  width:100%;background:none;border:0;padding:10px 14px;text-align:left;
+  display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;color:inherit;
+}
+.thead:hover{background:var(--surface)}
+.thead .nm{font-weight:600;font-size:.94rem}
+.thead .px{font-family:"IBM Plex Mono",monospace;font-size:.94rem;font-weight:600}
+.thead .qt{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink-faint);min-width:44px;text-align:right}
+.thead .qt.has{color:var(--navy);font-weight:600}
+.tform{padding:0 14px 14px;display:flex;flex-direction:column;gap:9px}
+.qtyrow{display:flex;gap:6px;align-items:center}
+.qtyrow input[type=number]{
+  flex:1;min-width:0;padding:.45em .6em;border:1px solid var(--line-strong);border-radius:6px;
+  background:var(--paper);font-family:"IBM Plex Mono",monospace;font-weight:600;
+}
+.qbtn{
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:6px;
+  padding:.42em .6em;font-size:.82rem;font-weight:600;color:var(--ink-soft);white-space:nowrap;
+}
+.qbtn:hover{background:var(--line)}
+.reason{
+  width:100%;padding:.5em .65em;border:1px solid var(--line-strong);border-radius:6px;
+  background:var(--paper);font-size:.9rem;
+}
+.reason.need{border-color:var(--rise);background:var(--rise-wash)}
+.act{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.buy,.sell{border:0;border-radius:6px;padding:.6em;font-weight:600;font-size:.92rem;color:#fff}
+.buy{background:var(--rise)} .sell{background:var(--fall)}
+:root[data-theme="dark"] .buy,:root[data-theme="dark"] .sell{color:#0E1319}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .buy,:root:not([data-theme="light"]) .sell{color:#0E1319}}
+.buy:disabled,.sell:disabled{opacity:.35;cursor:not-allowed}
+.cost{font-size:.8rem;color:var(--ink-faint);font-family:"IBM Plex Mono",monospace}
+
+.acct{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.acct div{background:var(--raise);padding:9px 12px}
+.acct dt{font-size:.72rem;color:var(--ink-faint);letter-spacing:.04em}
+.acct dd{margin:0;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.02rem}
+
+/* news shop */
+.nshop{display:flex;flex-direction:column;gap:8px}
+.nbtn{
+  width:100%;text-align:left;background:var(--raise);border:1px solid var(--line-strong);
+  border-radius:8px;padding:10px 13px;display:grid;grid-template-columns:auto 1fr auto;
+  gap:10px;align-items:center;color:inherit;
+}
+.nbtn:hover:not(:disabled){border-color:var(--navy);background:var(--surface)}
+.nbtn:disabled{opacity:.45;cursor:not-allowed}
+.tierpill{font-size:.7rem;font-weight:700;padding:.16em .5em;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.t-disc{color:var(--navy)} .t-news{color:var(--ink-soft)} .t-rumor{color:var(--rise)}
+.nbtn .meta{font-size:.78rem;color:var(--ink-faint)}
+.nbtn .cost{font-size:.84rem;font-weight:600;color:var(--ink-soft)}
+.owned{
+  background:var(--navy-wash);border:1px solid var(--navy-soft);border-radius:8px;
+  padding:10px 13px;font-size:.9rem;
+}
+.owned .tx{font-weight:500;margin-top:3px}
+
+/* reveal */
+.revtbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.revtbl th,.revtbl td{padding:.5em .6em;border-bottom:1px solid var(--line);text-align:left}
+.revtbl th{font-size:.75rem;letter-spacing:.04em;color:var(--ink-faint);text-transform:uppercase}
+.revtbl td.num{font-family:"IBM Plex Mono",monospace;font-weight:600;text-align:right}
+.hit{font-size:.74rem;font-weight:700;padding:.1em .45em;border-radius:3px}
+.hit.y{background:var(--fall-wash);color:var(--fall)}
+.hit.n{background:var(--rise-wash);color:var(--rise)}
+
+/* setup */
+.setup{max-width:720px;margin:0 auto;padding:40px 0 80px}
+.setup h2{font-family:"Gowun Batang",serif;font-size:1.9rem;margin-bottom:6px}
+.setup .lede{color:var(--ink-soft);margin-bottom:26px}
+.srow{display:grid;grid-template-columns:28px 1fr 110px 130px 34px;gap:9px;align-items:center;margin-bottom:8px}
+.srow .idx{font-family:"IBM Plex Mono",monospace;color:var(--ink-faint);font-size:.85rem}
+.srow input{padding:.5em .7em;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);width:100%}
+.srow .seed{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9rem;color:var(--navy);text-align:right}
+.srow .del{background:none;border:0;color:var(--ink-faint);font-size:1.1rem;line-height:1;padding:4px}
+.srow .del:hover{color:var(--rise)}
+.formula{
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 15px;
+  font-size:.88rem;color:var(--ink-soft);margin:18px 0;
+}
+
+/* meeting */
+.vote{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.vopt{border:2px solid var(--line-strong);border-radius:10px;padding:16px;background:var(--raise);text-align:left;color:inherit}
+.vopt:hover{border-color:var(--navy)}
+.vopt.win{border-color:var(--navy);background:var(--navy-wash)}
+.vopt h4{font-size:1.02rem;margin-bottom:4px}
+.vopt p{font-size:.86rem;color:var(--ink-soft)}
+.vopt .cnt{font-family:"IBM Plex Mono",monospace;font-size:1.6rem;font-weight:700;color:var(--navy);margin-top:8px}
+.shrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.shrow .vv{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:1.05rem;color:var(--navy)}
+.spoke{font-size:.76rem;display:flex;gap:5px;align-items:center;color:var(--ink-soft);cursor:pointer}
+
+/* debrief */
+.rank{display:flex;flex-direction:column;gap:0}
+.rrow{display:grid;grid-template-columns:34px 1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.rrow .pos{font-family:"IBM Plex Mono",monospace;font-weight:700;color:var(--ink-faint)}
+.rrow .nm{font-weight:600}
+.rrow .rt{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:1.06rem}
+.rrow .tv{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink-faint)}
+
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.cmpc{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+.cmpc h4{font-size:.82rem;color:var(--ink-faint);letter-spacing:.03em;margin-bottom:8px;text-transform:uppercase}
+.cmpline{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:.92rem}
+.cmpline .v{font-family:"IBM Plex Mono",monospace;font-weight:600}
+
+.fbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.fbc{background:var(--raise);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fbc>header{padding:10px 15px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fbc>header .nm{font-weight:700;font-size:1.04rem}
+.fbc>header .ty{font-size:.78rem;color:var(--navy);font-weight:600}
+.fbc .bd{padding:13px 15px;display:flex;flex-direction:column;gap:11px}
+.fbi{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start}
+.fbi .tag{font-size:.68rem;font-weight:700;padding:.15em .45em;border-radius:3px;white-space:nowrap;margin-top:2px}
+.fbi.good .tag{background:var(--fall-wash);color:var(--fall)}
+.fbi.think .tag{background:var(--rise-wash);color:var(--rise)}
+.fbi .tx{font-size:.91rem;line-height:1.55}
+
+.quotes{background:var(--surface);border-radius:8px;padding:11px 14px;margin-top:2px}
+.quotes h5{font-size:.74rem;color:var(--ink-faint);letter-spacing:.04em;margin:0 0 5px;font-weight:600}
+.quotes p{font-family:"Gowun Batang",serif;font-size:.93rem;color:var(--ink-soft);padding:1px 0}
+
+.empty{color:var(--ink-faint);font-size:.92rem;text-align:center;padding:24px}
+.warn{background:var(--amber-wash);border-left:3px solid var(--amber);padding:9px 13px;border-radius:0 6px 6px 0;font-size:.86rem;margin-bottom:12px}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;
+  background:var(--ink);color:var(--paper);padding:.6em 1.1em;border-radius:8px;
+  font-size:.92rem;font-weight:500;box-shadow:var(--shadow);pointer-events:none;
+}
+.modal{position:fixed;inset:0;z-index:80;background:rgba(10,14,20,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal .box{background:var(--paper);border-radius:12px;max-width:440px;width:100%;padding:24px;box-shadow:var(--shadow)}
+.modal h3{margin-bottom:8px}
+.modal p{color:var(--ink-soft);font-size:.94rem;margin-bottom:18px}
+.modal .row{display:flex;gap:9px;justify-content:flex-end}
+
+@media (max-width:820px){
+  .board{grid-template-columns:repeat(2,1fr)}
+  .tick .px{font-size:1.4rem}
+  .srow{grid-template-columns:22px 1fr 84px 34px;}
+  .srow .seed{grid-column:2/4;text-align:left}
+}
+@media print{.top,.tbtn{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head><body>
+<div id="app"></div>
+<div id="overlay"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script>
+/* ============================ 게임 데이터 ============================ */
+const STOCKS = [
+  {k:"FOOD", nm:"한입식품",   sec:"식품",        p0:10000, desc:"라면과 과자를 만든다. 경기가 나빠도 사람은 먹는다."},
+  {k:"LOGI", nm:"달려라택배", sec:"물류",        p0: 8000, desc:"온라인 주문이 늘면 같이 는다. 기름값에 민감하다."},
+  {k:"MED",  nm:"해맑은병원", sec:"헬스케어",    p0:12000, desc:"건강검진 센터를 운영한다. 꾸준하지만 크게 튀지 않는다."},
+  {k:"GAME", nm:"픽셀게임즈", sec:"게임",        p0:15000, desc:"신작 하나에 회사가 걸려 있다. 흥하면 크게, 망하면 크게."},
+  {k:"EV",   nm:"번쩍모빌리티",sec:"전기차·배터리",p0:20000, desc:"아직 돈은 못 벌지만 미래를 판다. 가장 크게 오르내린다."},
+];
+const SK = STOCKS.map(s=>s.k);
+const SNAME = Object.fromEntries(STOCKS.map(s=>[s.k,s.nm]));
+
+const CARDNO = { disc:"A", news:"B", rumor:"C" };
+const TIERS = {
+  disc : {nm:"금융감독원 공시", cls:"t-disc",  cost:50000, rate:"90%"},
+  news : {nm:"경제신문 기사",   cls:"t-news",  cost:30000, rate:"65%"},
+  rumor: {nm:"온라인 커뮤니티", cls:"t-rumor", cost:10000, rate:"40%"},
+};
+
+const ROUNDS = [
+  { n:1, title:"순한 출발 · 첫 오보 경험",
+    free:{who:"전체", tx:"이번 분기 소비 지출, 작년과 비슷한 수준 유지"},
+    paid:[
+      {tier:"disc", s:"FOOD", tx:"신규 라면 브랜드 매출, 전분기 대비 32% 증가", hit:true},
+      {tier:"news", s:"GAME", tx:"신작 게임 사전예약 100만 명 돌파", hit:true},
+      {tier:"rumor",s:"EV",   tx:"\"내부자한테 들었는데 대형 계약 임박함ㅋㅋ\"", hit:false},
+    ],
+    ch:{FOOD:5, LOGI:2, MED:-1, GAME:12, EV:-9} },
+  { n:2, title:"첫 해석형 뉴스",
+    free:{who:"달려라택배", tx:"택배 물동량, 명절 앞두고 증가세"},
+    paid:[
+      {tier:"disc", s:"MED",  tx:"신규 검진센터 2곳 개소, 투자비 200억 집행", hit:null, interp:true},
+      {tier:"news", s:"FOOD", tx:"원재료 밀 가격 15% 상승", hit:true},
+      {tier:"rumor",s:"GAME", tx:"\"이번 신작 망했다는 소문 돌던데\"", hit:false},
+    ],
+    ch:{FOOD:-5, LOGI:4, MED:-4, GAME:8, EV:3} },
+  { n:3, title:"긴 호흡의 뉴스 — 결과는 7·8라운드에",
+    free:{who:"전체", tx:"게임 산업 전체 성장률 둔화 전망"},
+    paid:[
+      {tier:"disc", s:"EV",   tx:"해외 공장 신설에 5,000억 투자 결정", hit:null, interp:true, longarc:"결과는 8라운드에"},
+      {tier:"news", s:"LOGI", tx:"경쟁사 대비 배송료 20% 인하 발표", hit:null, interp:true, longarc:"결과는 7라운드에"},
+      {tier:"rumor",s:"MED",  tx:"\"원장 바뀐다는데?\"", hit:false},
+    ],
+    ch:{FOOD:1, LOGI:-6, MED:0, GAME:-3, EV:14} },
+  { n:4, title:"주주총회 직전",
+    free:{who:"해맑은병원", tx:"정부, 헬스케어 산업 지원 확대 검토"},
+    paid:[
+      {tier:"disc", s:"GAME", tx:"창업자 겸 대표이사 사임", hit:null, interp:true},
+      {tier:"news", s:"FOOD", tx:"해외 수출 첫 계약 체결", hit:true},
+      {tier:"rumor",s:"LOGI", tx:"\"물류센터에 사고 났대\"", hit:false},
+    ],
+    ch:{FOOD:6, LOGI:4, MED:2, GAME:-15, EV:-2} },
+  { n:5, title:"기준금리 인상 — 시장 전체 충격", shock:true,
+    free:{who:"속보", tx:"한국은행, 기준금리 0.5%p 인상 발표",
+          sub:"전 종목 동시 하락. 개별 정보로는 피할 수 없는 체계적 위험입니다. 이번 라운드는 정보를 판매하지 않습니다."},
+    paid:[],
+    ch:{FOOD:-4, LOGI:-9, MED:-6, GAME:-13, EV:-22} },
+  { n:6, title:"충격 직후 — 안정주가 먼저 돌아온다",
+    free:{who:"전체", tx:"금리 인상 후 소비 심리 위축"},
+    paid:[
+      {tier:"disc", s:"FOOD", tx:"배당 확대 결정", hit:true},
+      {tier:"news", s:"EV",   tx:"전기차 보조금 축소 검토", hit:true},
+      {tier:"rumor",s:"GAME", tx:"\"지금이 바닥이다 지금 사야 함\"", hit:false},
+    ],
+    ch:{FOOD:7, LOGI:1, MED:3, GAME:-7, EV:-11} },
+  { n:7, title:"3라운드 배송료 뉴스의 답",
+    free:{who:"전체", tx:"증시 반등 조짐, 외국인 순매수 전환"},
+    paid:[
+      {tier:"news", s:"LOGI", tx:"배송료 인하 후 시장 점유율 8%p 상승", hit:true, payoff:"3라운드 해석형의 결과"},
+      {tier:"disc", s:"MED",  tx:"신규 검진센터 예약률 90% 기록", hit:true, payoff:"2라운드 해석형의 결과"},
+      {tier:"rumor",s:"FOOD", tx:"\"밀 가격 또 오른다던데\"", hit:false},
+    ],
+    ch:{FOOD:3, LOGI:16, MED:9, GAME:2, EV:5} },
+  { n:8, title:"3라운드 공장 투자의 답 · 마지막 라운드",
+    free:{who:"전체", tx:"분기 실적 발표 시즌 마무리"},
+    paid:[
+      {tier:"disc", s:"EV",   tx:"해외 공장 첫 가동, 수주 3,000억 확보", hit:true, payoff:"3라운드 해석형의 결과"},
+      {tier:"news", s:"GAME", tx:"신작 출시 3개월 연기", hit:null, interp:true},
+      {tier:"rumor",s:"MED",  tx:"\"인수합병설 돈다\"", hit:false},
+    ],
+    ch:{FOOD:2, LOGI:6, MED:0, GAME:-10, EV:24} },
+];
+
+const FEE = 0.005;
+const MEETING_AFTER = 4;
+const VAGUE = ["그냥","느낌","감으로","감이","몰라","모르","아무","찍","랜덤","때려"];
+
+/* ============================ 상태 ============================ */
+let S = null, store = null, selected = null, openStock = null, toastT = null, snapshot = null, peek = false, joined = {};
+
+function freshStudent(id, name, score){
+  const seed = 500000 + score*5000;
+  return { id, name, score, seed, cash:seed, hold:Object.fromEntries(SK.map(k=>[k,0])),
+           trades:[], news:[], fees:0, spoke:false };
+}
+function freshState(){
+  return { v:1, rev:0, phase:"setup", round:1, revealed:false, practice:false,
+           students:[], prices:Object.fromEntries(STOCKS.map(s=>[s.k,s.p0])),
+           prev:Object.fromEntries(STOCKS.map(s=>[s.k,s.p0])),
+           history:[], meeting:{done:false, co:null, a:0, b:0, pick:null}, vol:null };
+}
+
+/* ============================ 저장 (Firebase) ============================ */
+firebase.initializeApp(firebaseConfig);
+const DB = firebase.database();
+const FB = p => DB.ref(`rooms/${ROOM}/${p}`);
+
+async function initStore(){
+  store = {
+    save: st => FB("state").set(JSON.parse(JSON.stringify(st))).catch(e=>toast("저장 실패 — 인터넷을 확인하세요.")),
+    load: async () => { try{ return (await FB("state").get()).val(); }catch(e){ return null; } },
+  };
+}
+let saveT=null;
+function persist(){
+  if(!store) return;
+  clearTimeout(saveT);
+  saveT = setTimeout(()=>{ S.rev = (S.rev||0)+1; stamp(); store.save(S); }, 200);
+}
+
+// 학생 화면이 볼 수 있는 정보만 상태에 실어 보낸다.
+// 유료 뉴스의 '내용'은 절대 여기 담지 않는다 — 산 학생의 비공개 경로로만 간다.
+function stamp(){
+  const R = ROUNDS[S.round-1];
+  if(!R){ S.free=null; S.offers=[]; return; }
+  S.free = { tx:R.free.tx, shock:!!R.shock,
+             sub: R.shock? R.free.sub : `${R.free.who} · 모두가 보는 뉴스입니다. 이미 주가에 반영되어 있어요.` };
+  S.offers = (S.revealed || S.phase!=="play") ? [] : R.paid.map(p=>({tier:p.tier, s:p.s}));
+}
+
+/* ---------- 학생 주문 접수 ---------- */
+function watchOrders(){
+  FB("orders").on("child_added", snap=> applyOrder(snap.val(), snap.key));
+}
+function applyOrder(o, key){
+  const finish = (text, ok) => {
+    FB(`orders/${key}`).remove();
+    if(o && o.sid) FB(`msg/${o.sid}`).set({text, ok, ts:Date.now()});
+  };
+  if(!o || !o.sid) return FB(`orders/${key}`).remove();
+  const st = S.students.find(s=>s.id===o.sid);
+  if(!st) return finish("계좌를 찾을 수 없습니다.", false);
+  if(S.phase!=="play" || S.revealed) return finish("주문이 마감되었습니다.", false);
+  if(o.round !== S.round) return finish("라운드가 넘어갔습니다.", false);
+
+  if(o.kind==="buy"){
+    const p = S.prices[o.s], cost = o.qty*p*(1+FEE);
+    if(!(o.qty>0)) return finish("수량을 확인하세요.", false);
+    if(!o.reason) return finish("매수 이유를 적어야 합니다.", false);
+    if(st.cash < cost) return finish("예수금이 부족합니다.", false);
+    st.cash -= cost; st.hold[o.s] += o.qty; st.fees += o.qty*p*FEE;
+    st.trades.push({round:S.round, s:o.s, type:"buy", qty:o.qty, price:p, reason:o.reason});
+    finish(`${SNAME[o.s]} ${o.qty}주 매수 완료`, true);
+  }
+  else if(o.kind==="sell"){
+    const p = S.prices[o.s];
+    if(!(o.qty>0)) return finish("수량을 확인하세요.", false);
+    if(st.hold[o.s] < o.qty) return finish("보유 수량이 부족합니다.", false);
+    st.cash += o.qty*p*(1-FEE); st.hold[o.s] -= o.qty; st.fees += o.qty*p*FEE;
+    const last = S.history[S.history.length-1];
+    st.trades.push({round:S.round, s:o.s, type:"sell", qty:o.qty, price:p,
+                    reason:o.reason||"", dropBefore: last? last.ch[o.s]<0 : false});
+    finish(`${SNAME[o.s]} ${o.qty}주 매도 완료`, true);
+  }
+  else if(o.kind==="news"){
+    const R = curRound();
+    const p = R.paid.find(x=>x.tier===o.tier && x.s===o.s);
+    if(!p) return finish("판매하지 않는 정보입니다.", false);
+    const t = TIERS[o.tier];
+    if(st.news.some(n=>n.round===S.round)) return finish("이번 라운드에는 이미 샀습니다.", false);
+    if(st.cash < t.cost) return finish("예수금이 부족합니다.", false);
+    st.cash -= t.cost;
+    // 공유 상태에는 '무엇을 샀는지'만 남긴다. 내용(tx)을 여기 넣으면 모든 학생이 내려받는다.
+    st.news.push({round:S.round, tier:p.tier, s:p.s, hit:p.hit, cost:t.cost});
+    FB(`private/${o.sid}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
+    finish(`정보를 받았습니다. 아래에서 확인하세요.`, true);
+  }
+  else return finish("알 수 없는 주문입니다.", false);
+
+  commit();
+}
+function commit(){ persist(); render(); }
+
+/* ============================ 계산 ============================ */
+const won = n => Math.round(n).toLocaleString("ko-KR");
+const stockVal = (st,pr) => SK.reduce((a,k)=>a+st.hold[k]*pr[k], 0);
+const total = (st,pr) => st.cash + stockVal(st,pr);
+const retPct = (st,pr) => (total(st,pr) - st.seed) / st.seed * 100;
+const curRound = () => ROUNDS[S.round-1];
+const sgn = v => v>0? "+" : "";
+const cls = v => v>0? "rise" : v<0? "fall" : "flat";
+
+/* ============================ 렌더 ============================ */
+function render(){
+  const app = document.getElementById("app");
+  if(!S){ app.innerHTML = `<div class="empty" style="padding:80px">불러오는 중…</div>`; return; }
+  if(S.phase==="setup"){ app.innerHTML = viewSetup(); bindSetup(); return; }
+  app.innerHTML = topBar() + boardHTML() + `<div class="wrap">` + (
+      S.phase==="meeting"  ? viewMeeting()  :
+      S.phase==="debrief"  ? viewDebrief()  : viewPlay()
+    ) + `</div>`;
+  bindMain();
+}
+
+function topBar(){
+  const prac = S.practice? `<span class="phasechip" style="color:var(--amber);border-color:var(--amber)">연습 라운드 · 기록 안 됨</span>`:"";
+  const ph = S.phase==="meeting"? "주주총회" : S.phase==="debrief"? "정산 · 디브리핑"
+           : S.revealed? `라운드 ${S.round} 결과 공개` : `라운드 ${S.round} 주문 중`;
+  let right = "";
+  if(S.phase==="play"){
+    right = S.revealed
+      ? `<button class="tbtn primary" data-a="next">${S.round>=8? "정산으로 →" : (S.round===MEETING_AFTER && !S.meeting.done ? "주주총회 열기 →" : `라운드 ${S.round+1} 시작 →`)}</button>`
+      : `<button class="tbtn primary" data-a="close">라운드 마감 · 결과 공개</button>`;
+  }else if(S.phase==="meeting"){
+    right = `<button class="tbtn primary" data-a="meetdone" ${S.meeting.pick?"":"disabled"}>결과 반영하고 라운드 5로 →</button>`;
+  }else if(S.phase==="debrief"){
+    right = `<button class="tbtn" data-a="exp1">요약 CSV</button>
+             <button class="tbtn" data-a="exp2">거래내역 CSV</button>
+             <button class="tbtn" data-a="exp3">피드백 CSV</button>
+             <button class="tbtn" data-a="back">거래 화면으로</button>`;
+  }
+  return `<div class="top"><div class="wrap">
+    <div class="brand">한빛<span>증권</span></div>
+    <span class="roundchip">${S.phase==="debrief"? "최종" : `R${S.round} / 8`}</span>
+    <span class="phasechip">${ph}</span>${prac}
+    <div class="spacer"></div>
+    ${S.phase==="play" && !S.revealed && !S.practice && S.round===1 && !S.history.length
+      ? `<button class="tbtn" data-a="practice">${"연습 라운드"}</button>`:""}
+    ${S.practice? `<button class="tbtn" data-a="pracend">연습 종료 · 계좌 복구</button>`:""}
+    <button class="tbtn" data-a="qr">학생 접속 QR</button>
+    <span class="phasechip">접속 ${S.students.filter(s=>joined[s.id]).length}/${S.students.length}</span>
+    ${S.phase!=="debrief"? `<button class="tbtn" data-a="interest">이자 일괄 지급 5%</button>`:""}
+    <button class="tbtn" data-a="reset">전체 초기화</button>
+    ${right}
+  </div></div>`;
+}
+
+function boardHTML(){
+  return `<div class="board">` + STOCKS.map(s=>{
+    const p=S.prices[s.k], q=S.prev[s.k], d=p-q, pct=q? d/q*100:0;
+    const c = d>0?"up":d<0?"dn":"";
+    return `<div class="tick ${c}">
+      <div class="nm">${s.nm}</div><div class="sec">${s.sec}</div>
+      <div class="px ${cls(d)}">${won(p)}</div>
+      <div class="dt ${cls(d)}">${d===0?"보합":`${sgn(d)}${won(d)} (${sgn(pct)}${pct.toFixed(1)}%)`}</div>
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+/* ---------- 설정 ---------- */
+function viewSetup(){
+  const rows = S.students.map((st,i)=>`
+    <div class="srow" data-i="${i}">
+      <span class="idx">${i+1}</span>
+      <input class="f-nm" value="${esc(st.name)}" placeholder="학생 이름" maxlength="12">
+      <input class="f-sc" type="number" min="0" max="100" step="10" value="${st.score}" placeholder="점수">
+      <span class="seed">${won(500000+st.score*5000)}원</span>
+      <button class="del" data-a="del" title="삭제">×</button>
+    </div>`).join("");
+  return `<div class="wrap"><div class="setup">
+    <h2>계좌 개설</h2>
+    <p class="lede">1차시 퀴즈 점수를 입력하면 시드머니가 자동으로 계산됩니다. 학생 7명 기준으로 준비되어 있습니다.</p>
+    ${rows || `<p class="empty">학생을 추가하세요.</p>`}
+    <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
+      <button class="tbtn" data-a="add">＋ 학생 추가</button>
+      <button class="tbtn" data-a="qr">학생 접속 QR 보기</button>
+    </div>
+    <div class="formula">
+      <strong>시드머니 = 500,000원 + (퀴즈 점수 × 5,000원)</strong><br>
+      0점이어도 50만 원은 보장됩니다. 순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
+    </div>
+    <div class="formula" style="background:var(--navy-wash);border-color:var(--navy-soft)">
+      수수료 0.5% · 정보는 라운드당 1인 1건 · 주주총회는 4라운드 종료 후 · 기준금리 충격은 5라운드
+    </div>
+    <p id="cnt" style="text-align:center;font-weight:600;font-size:.92rem;margin-bottom:8px">이름이 입력된 학생 0명</p>
+    <button class="tbtn primary" data-a="start" style="width:100%;padding:.75em;font-size:1rem">개장</button>
+  </div></div>`;
+}
+
+/* ---------- 거래 ---------- */
+function viewPlay(){
+  const R = curRound();
+  const free = `<div class="newsbar ${R.shock?"shock":""}">
+      <span class="lbl">${R.shock?"속보":"무료"}</span>
+      <div><div class="tx">${esc(R.free.tx)}</div>
+      <div class="sub">${R.shock? esc(R.free.sub) : `${esc(R.free.who)} · 이미 주가에 반영되어 있습니다. 보고 사면 늦습니다.`}</div></div>
+    </div>`;
+
+  const cards = S.students.map(st=>{
+    const r = retPct(st,S.prices);
+    const badges = SK.filter(k=>st.hold[k]>0).map(k=>`<span class="hbadge">${SNAME[k].slice(0,3)} ${st.hold[k]}</span>`).join("");
+    return `<button class="scard ${selected===st.id?"sel":""}" data-a="sel" data-id="${st.id}">
+      <span class="nm">${joined[st.id]? `<span title="접속됨" style="color:var(--fall)">●</span> `:`<span title="미접속" style="color:var(--line-strong)">○</span> `}${esc(st.name)}</span>
+      <span class="tot n">${won(total(st,S.prices))}</span>
+      <span class="ret ${cls(r)}">${sgn(r)}${r.toFixed(1)}%</span>
+      <span class="hold">${badges||`<span class="hbadge" style="opacity:.5">보유 없음</span>`}</span>
+    </button>`;
+  }).join("");
+
+  return free + `<div class="cols">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="card"><header><h3>학생 계좌</h3>
+        <span style="font-size:.82rem;color:var(--ink-faint)">카드를 눌러 거래합니다</span></header>
+        <div class="bd"><div class="sgrid">${cards}</div></div></div>
+      ${S.revealed? revealCard() : ""}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px">${selected? tradePanel() : `
+      <div class="card"><div class="bd"><p class="empty">왼쪽에서 학생을 선택하세요.</p></div></div>`}</div>
+  </div>`;
+}
+
+function tradePanel(){
+  const st = S.students.find(s=>s.id===selected);
+  if(!st) return "";
+  const R = curRound();
+  const bought = st.news.find(n=>n.round===S.round);
+  const locked = S.revealed;
+
+  const rows = STOCKS.map(s=>{
+    const open = openStock===s.k && !locked;
+    const q = st.hold[s.k], p = S.prices[s.k];
+    return `<div class="trow">
+      <button class="thead" data-a="open" data-k="${s.k}" ${locked?"disabled":""}>
+        <span class="nm">${s.nm}</span><span class="px n">${won(p)}</span>
+        <span class="qt n ${q>0?"has":""}">${q>0? q+"주":"—"}</span>
+      </button>
+      ${open? `<div class="tform">
+        <div class="qtyrow">
+          <button class="qbtn" data-a="q" data-k="${s.k}" data-v="-10">−10</button>
+          <button class="qbtn" data-a="q" data-k="${s.k}" data-v="-1">−1</button>
+          <input type="number" id="qty" min="1" step="1" value="${qtyVal||10}">
+          <button class="qbtn" data-a="q" data-k="${s.k}" data-v="1">+1</button>
+          <button class="qbtn" data-a="q" data-k="${s.k}" data-v="10">+10</button>
+          <button class="qbtn" data-a="qmax" data-k="${s.k}">최대</button>
+        </div>
+        <input class="reason ${reasonVal.trim()?"":"need"}" id="reason" placeholder="왜 이 회사를 샀나요? (매수 시 필수)" value="${esc(reasonVal)}" maxlength="60">
+        <div class="cost">매수 ${won((qtyVal||0)*S.prices[s.k]*(1+FEE))}원 · 매도 ${won((qtyVal||0)*S.prices[s.k]*(1-FEE))}원 <span style="opacity:.7">(수수료 0.5% 포함)</span></div>
+        <div class="act">
+          <button class="buy" data-a="buy" data-k="${s.k}" ${(qtyVal>0 && reasonVal.trim() && st.cash>=qtyVal*p*(1+FEE))?"":"disabled"}>매수</button>
+          <button class="sell" data-a="sell" data-k="${s.k}" ${(qtyVal>0 && q>=qtyVal)?"":"disabled"}>매도</button>
+        </div>
+      </div>`:""}
+    </div>`;
+  }).join("");
+
+  const shop = R.paid.length===0
+    ? `<p class="empty" style="padding:14px">이번 라운드는 정보를 판매하지 않습니다.<br><span style="font-size:.86rem">정보로 피할 수 없는 위험이 있다는 것이 오늘의 학습 내용입니다.</span></p>`
+    : bought
+      ? `<div class="owned">
+         <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+           <span class="tierpill ${TIERS[bought.tier].cls}">${TIERS[bought.tier].nm}</span>
+           <span style="font-size:.8rem;color:var(--ink-faint)">${SNAME[bought.s]}</span>
+         </div>
+         <div class="tx"><strong>${esc(st.name)}</strong> 학생 폰으로 전달되었습니다. 내용은 본인만 봅니다.</div>
+         <button class="tbtn" data-a="peek" style="margin-top:7px;font-size:.8rem">${peek?"가리기":"교사 확인용 · 내용 보기"}</button>
+         ${peek? `<div style="margin-top:7px;font-family:'Gowun Batang',serif;font-size:.95rem;padding:9px 11px;background:var(--paper);border-radius:6px;border:1px solid var(--line)">${esc(newsText(bought))}</div>`:""}
+         </div>`
+      : `<div class="nshop">${R.paid.map((p,i)=>`
+          <button class="nbtn" data-a="news" data-i="${i}" ${(locked||st.cash<TIERS[p.tier].cost)?"disabled":""}>
+            <span class="tierpill ${TIERS[p.tier].cls}">${TIERS[p.tier].nm}</span>
+            <span class="meta">${SNAME[p.s]} · 적중률 ${TIERS[p.tier].rate}</span>
+            <span class="cost">${won(TIERS[p.tier].cost)}원</span>
+          </button>`).join("")}</div>`;
+
+  const log = st.trades.slice(-5).reverse().map(t=>`
+    <div style="display:grid;grid-template-columns:26px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:.86rem">
+      <span class="n" style="color:var(--ink-faint)">R${t.round}</span>
+      <span>${SNAME[t.s]} <strong class="${t.type==='buy'?'rise':'fall'}">${t.type==='buy'?'매수':'매도'}</strong> ${t.qty}주
+        ${t.reason? `<div style="font-family:'Gowun Batang',serif;color:var(--ink-faint);font-size:.86rem">"${esc(t.reason)}"</div>`:""}</span>
+      <span class="n" style="color:var(--ink-faint)">${won(t.price)}</span>
+    </div>`).join("") || `<p class="empty" style="padding:10px">아직 거래가 없습니다.</p>`;
+
+  return `
+  <div class="card"><header><h3>${esc(st.name)}</h3>
+    <span style="font-size:.82rem;color:var(--ink-faint)">시드 ${won(st.seed)}원 · 퀴즈 ${st.score}점</span></header>
+    <div class="bd" style="display:flex;flex-direction:column;gap:12px">
+      <div class="acct">
+        <div><dt>예수금</dt><dd class="n">${won(st.cash)}</dd></div>
+        <div><dt>주식 평가액</dt><dd class="n">${won(stockVal(st,S.prices))}</dd></div>
+        <div><dt>총자산</dt><dd class="n">${won(total(st,S.prices))}</dd></div>
+        <div><dt>수익률</dt><dd class="n ${cls(retPct(st,S.prices))}">${sgn(retPct(st,S.prices))}${retPct(st,S.prices).toFixed(1)}%</dd></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card"><header><h3>주문</h3>${S.revealed?`<span style="font-size:.8rem;color:var(--ink-faint)">결과 공개 중 · 주문 마감</span>`:""}</header>
+    <div>${rows}</div></div>
+
+  <div class="card"><header><h3>정보 구매</h3><span style="font-size:.8rem;color:var(--ink-faint)">라운드당 1건</span></header>
+    <div class="bd">${shop}</div></div>
+
+  <div class="card"><header><h3>거래내역</h3></header><div class="bd">${log}</div></div>`;
+}
+
+function revealCard(){
+  const R = curRound();
+  const rows = STOCKS.map(s=>{
+    const c = R.ch[s.k]*(S.vol && S.vol.co===s.k && S.vol.left>0 ? 2 : 1);
+    return `<tr><td>${s.nm}</td><td class="num ${cls(c)}">${sgn(c)}${c}%</td>
+      <td class="num">${won(S.prices[s.k])}</td></tr>`;
+  }).join("");
+  const info = R.paid.length? R.paid.map(p=>`
+    <div style="display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line)">
+      <span class="tierpill ${TIERS[p.tier].cls}">${TIERS[p.tier].nm.replace("금융감독원 ","").replace("온라인 ","")}</span>
+      <span style="font-size:.9rem">${SNAME[p.s]} · ${esc(p.tx)}
+        ${p.payoff? `<div style="font-size:.8rem;color:var(--navy);font-weight:600">${p.payoff}</div>`:""}
+        ${p.longarc? `<div style="font-size:.8rem;color:var(--amber);font-weight:600">${p.longarc} — 아직 답을 알 수 없습니다</div>`:""}</span>
+      <span class="hit ${p.hit===true?"y":p.hit===false?"n":""}" style="${p.hit===null?"background:var(--surface-2);color:var(--ink-faint)":""}">${p.hit===true?"적중":p.hit===false?"빗나감":"해석형"}</span>
+    </div>`).join("") : `<p class="empty" style="padding:8px">이 라운드는 정보를 판매하지 않았습니다.</p>`;
+  return `<div class="card"><header><h3>라운드 ${S.round} 결과 — ${esc(R.title)}</h3></header>
+    <div class="bd" style="display:flex;flex-direction:column;gap:16px">
+      <table class="revtbl"><thead><tr><th>종목</th><th style="text-align:right">등락</th><th style="text-align:right">현재가</th></tr></thead><tbody>${rows}</tbody></table>
+      <div><h4 style="font-size:.8rem;color:var(--ink-faint);letter-spacing:.04em;margin-bottom:4px">정보 정답 공개</h4>${info}</div>
+    </div></div>`;
+}
+
+/* ---------- 주주총회 ---------- */
+function viewMeeting(){
+  const counts = SK.map(k=>({k, holders:S.students.filter(s=>s.hold[k]>0).length,
+                             shares:S.students.reduce((a,s)=>a+s.hold[k],0)}));
+  const co = S.meeting.co || counts.slice().sort((a,b)=> b.holders-a.holders || b.shares-a.shares)[0].k;
+  if(!S.meeting.co){ S.meeting.co = co; persist(); }
+  const holders = S.students.filter(s=>s.hold[co]>0).sort((a,b)=>b.hold[co]-a.hold[co]);
+
+  const list = holders.length? holders.map(s=>`
+    <div class="shrow"><span style="font-weight:600">${esc(s.name)}</span>
+      <label class="spoke"><input type="checkbox" data-a="spoke" data-id="${s.id}" ${s.spoke?"checked":""}> 발언함</label>
+      <span class="vv">${s.hold[co]}표</span></div>`).join("")
+    : `<p class="empty">이 회사의 주주가 없습니다. 다른 회사를 선택하세요.</p>`;
+
+  const totalVotes = holders.reduce((a,s)=>a+s.hold[co],0);
+
+  return `<div style="max-width:820px;margin:0 auto;padding:24px 0 60px;display:flex;flex-direction:column;gap:18px">
+    <div class="newsbar"><span class="lbl">주주총회</span>
+      <div><div class="tx">${SNAME[co]} 임시 주주총회 · 총 ${totalVotes}표</div>
+      <div class="sub">주식 1주 = 1표. 주주만 참여합니다.</div></div></div>
+
+    <div class="card"><header><h3>대상 회사</h3></header><div class="bd">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${counts.map(c=>`
+        <button class="tbtn ${c.k===co?"primary":""}" data-a="setco" data-k="${c.k}">${SNAME[c.k]}
+          <span style="opacity:.75;font-size:.85em"> 주주 ${c.holders}명 · ${c.shares}주</span></button>`).join("")}</div>
+      <p style="font-size:.85rem;color:var(--ink-faint);margin-top:9px">주주가 가장 많은 회사가 자동 선택됩니다.</p>
+    </div></div>
+
+    <div class="card"><header><h3>주주 명부 · 의결권</h3></header><div class="bd">${list}</div></div>
+
+    <div class="card"><header><h3>안건 — 회사가 번 이익 100억을 어디에 쓸까?</h3></header><div class="bd">
+      <div class="vote">
+        <button class="vopt ${S.meeting.pick==="a"?"win":""}" data-a="pick" data-p="a">
+          <h4>ⓐ 신사업에 투자한다</h4>
+          <p>회사를 키우는 데 쓴다. 잘되면 크게 오르지만 결과가 불확실해진다.</p>
+          <div class="cnt">${S.meeting.a}표</div>
+          <p style="font-size:.8rem;color:var(--navy);font-weight:600;margin-top:4px">이후 2개 라운드 변동폭 2배</p>
+        </button>
+        <button class="vopt ${S.meeting.pick==="b"?"win":""}" data-a="pick" data-p="b">
+          <h4>ⓑ 주주에게 배당한다</h4>
+          <p>주주가 지금 돈을 받는다. 대신 회사에 남는 돈이 줄어든다.</p>
+          <div class="cnt">${S.meeting.b}표</div>
+          <p style="font-size:.8rem;color:var(--navy);font-weight:600;margin-top:4px">주당 500원 지급 후 주가 300원 하락</p>
+        </button>
+      </div>
+      <div style="display:flex;gap:9px;align-items:center;margin-top:14px;flex-wrap:wrap">
+        <span style="font-size:.88rem;color:var(--ink-soft)">표 집계</span>
+        <button class="tbtn" data-a="vote" data-p="a" data-d="1">ⓐ +1</button>
+        <button class="tbtn" data-a="vote" data-p="a" data-d="-1">ⓐ −1</button>
+        <button class="tbtn" data-a="vote" data-p="b" data-d="1">ⓑ +1</button>
+        <button class="tbtn" data-a="vote" data-p="b" data-d="-1">ⓑ −1</button>
+        <button class="tbtn" data-a="voteclear">초기화</button>
+      </div>
+      <div class="formula" style="margin-top:14px">
+        <strong>발문.</strong> "지금 결과를 누가 정했죠? 표가 제일 많았던 사람이 누구예요?" —
+        주식을 많이 가진 사람이 회사의 방향을 정합니다. 뉴스에서 '경영권 다툼'이라고 부르는 게 이겁니다.
+      </div>
+    </div></div>
+  </div>`;
+}
+
+/* ---------- 디브리핑 ---------- */
+function viewDebrief(){
+  const rank = S.students.slice().sort((a,b)=> retPct(b,S.prices)-retPct(a,S.prices));
+  const rows = rank.map((st,i)=>{
+    const r = retPct(st,S.prices);
+    return `<div class="rrow"><span class="pos">${i+1}</span><span class="nm">${esc(st.name)}</span>
+      <span class="tv">${won(total(st,S.prices))}원</span>
+      <span class="rt ${cls(r)}">${sgn(r)}${r.toFixed(1)}%</span></div>`;
+  }).join("");
+
+  const conc = st => { const v=stockVal(st,S.prices); if(!v) return 0;
+    return Math.max(...SK.map(k=>st.hold[k]*S.prices[k]))/v; };
+  const held = st => SK.filter(k=>st.hold[k]>0).length;
+  const avg = arr => arr.length? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  const fmt = v => v===null? "—" : `${sgn(v)}${v.toFixed(1)}%`;
+
+  const mono = S.students.filter(s=>conc(s)>=.7), spread = S.students.filter(s=>held(s)>=3 && conc(s)<.7);
+  const info = S.students.filter(s=>s.news.length>0), noinfo = S.students.filter(s=>s.news.length===0);
+  const discB = S.students.filter(s=>s.news.some(n=>n.tier==="disc"));
+  const rumorOnly = S.students.filter(s=>s.news.length>0 && s.news.every(n=>n.tier==="rumor"));
+  const many = S.students.filter(s=>s.trades.length>=6), few = S.students.filter(s=>s.trades.length<6);
+  const R = st=>retPct(st,S.prices);
+
+  const cmp = `<div class="cmp">
+    <div class="cmpc"><h4>몰빵 vs 분산</h4>
+      <div class="cmpline"><span>한 종목 70%↑ (${mono.length}명)</span><span class="v ${mono.length?cls(avg(mono.map(R))):""}">${fmt(avg(mono.map(R)))}</span></div>
+      <div class="cmpline"><span>3종목↑ 분산 (${spread.length}명)</span><span class="v ${spread.length?cls(avg(spread.map(R))):""}">${fmt(avg(spread.map(R)))}</span></div></div>
+    <div class="cmpc"><h4>정보 구매</h4>
+      <div class="cmpline"><span>구매함 (${info.length}명)</span><span class="v ${info.length?cls(avg(info.map(R))):""}">${fmt(avg(info.map(R)))}</span></div>
+      <div class="cmpline"><span>구매 안 함 (${noinfo.length}명)</span><span class="v ${noinfo.length?cls(avg(noinfo.map(R))):""}">${fmt(avg(noinfo.map(R)))}</span></div>
+      <div class="cmpline"><span>공시 구매 (${discB.length}명)</span><span class="v ${discB.length?cls(avg(discB.map(R))):""}">${fmt(avg(discB.map(R)))}</span></div>
+      <div class="cmpline"><span>소문만 (${rumorOnly.length}명)</span><span class="v ${rumorOnly.length?cls(avg(rumorOnly.map(R))):""}">${fmt(avg(rumorOnly.map(R)))}</span></div></div>
+    <div class="cmpc"><h4>매매 횟수</h4>
+      <div class="cmpline"><span>6회 이상 (${many.length}명)</span><span class="v ${many.length?cls(avg(many.map(R))):""}">${fmt(avg(many.map(R)))}</span></div>
+      <div class="cmpline"><span>6회 미만 (${few.length}명)</span><span class="v ${few.length?cls(avg(few.map(R))):""}">${fmt(avg(few.map(R)))}</span></div>
+      <div class="cmpline"><span>전체 수수료 합계</span><span class="v">${won(S.students.reduce((a,s)=>a+s.fees,0))}원</span></div></div>
+  </div>`;
+
+  const cards = S.students.map(st=>{
+    const f = feedback(st);
+    const qs = st.trades.filter(t=>t.reason).slice(-3).map(t=>`<p>"${esc(t.reason)}"</p>`).join("");
+    return `<div class="fbc"><header><span class="nm">${esc(st.name)}</span><span class="ty">${f.type}</span></header>
+      <div class="bd">
+        ${f.items.map(it=>`<div class="fbi ${it.kind}"><span class="tag">${it.kind==="good"?"잘한 것":"생각해볼 것"}</span><span class="tx">${it.tx}</span></div>`).join("")}
+        ${qs? `<div class="quotes"><h5>내가 쓴 매수 이유</h5>${qs}</div>`:""}
+      </div></div>`;
+  }).join("");
+
+  return `<div style="padding:24px 0 70px;display:flex;flex-direction:column;gap:20px">
+    <div class="card"><header><h3>수익률 순위</h3>
+      <span style="font-size:.82rem;color:var(--ink-faint)">시드머니가 달라도 %로 비교하므로 공정합니다 — 짧게 지나가세요</span></header>
+      <div class="bd"><div class="rank">${rows}</div></div></div>
+
+    <div class="card"><header><h3>전체 비교</h3></header><div class="bd">${cmp}
+      <p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px">
+        표본이 7명이라 평균은 흔들립니다. 숫자를 결론으로 읽지 말고 <strong>"왜 그렇게 나왔을까"</strong>를 묻는 재료로 쓰세요.</p></div></div>
+
+    <div class="card"><header><h3>개인별 피드백 카드</h3>
+      <span style="font-size:.82rem;color:var(--ink-faint)">순위가 아니라 판단 습관 — 1등부터 읽지 마세요</span></header>
+      <div class="bd"><div class="fbgrid">${cards}</div></div></div>
+  </div>`;
+}
+
+function feedback(st){
+  const items = [], types = [];
+  const v = stockVal(st,S.prices);
+  const conc = v? Math.max(...SK.map(k=>st.hold[k]*S.prices[k]))/v : 0;
+  const topK = v? SK.reduce((a,k)=> st.hold[k]*S.prices[k] > st.hold[a]*S.prices[a] ? k:a, SK[0]) : null;
+  const nHeld = SK.filter(k=>st.hold[k]>0).length;
+  const nTr = st.trades.length;
+  const rumor = st.news.filter(n=>n.tier==="rumor"), disc = st.news.filter(n=>n.tier==="disc");
+  const rumorHit = rumor.filter(n=>n.hit===true).length;
+  const vague = st.trades.filter(t=>t.reason && VAGUE.some(w=>t.reason.includes(w))).length;
+  const withReason = st.trades.filter(t=>t.reason).length;
+  const panic = st.trades.filter(t=>t.type==="sell" && t.dropBefore).length;
+  const panicUp = st.trades.filter(t=>t.type==="sell" && t.dropBefore && t.roseAfter).length;
+
+  const G = tx => items.push({kind:"good", tx});
+  const T = tx => items.push({kind:"think", tx});
+
+  if(nTr>=6){ types.push("부지런한 트레이더");
+    T(`수수료로 <strong class="n">${won(st.fees)}원</strong>이 나갔습니다. 판단이 아니라 <strong>횟수</strong>로 나간 돈이에요.`);
+    G(`총 ${nTr}번 거래하며 시장 변화에 빠르게 반응했습니다.`); }
+  if(conc>=.7 && nHeld>0){ types.push("확신형");
+    G(`${SNAME[topK]}에 자산의 ${Math.round(conc*100)}%를 실었습니다. 고른 이유가 분명했고 끝까지 밀고 갔어요.`);
+    T(`맞으면 크게, 틀리면 크게. 이번엔 어느 쪽이었나요?`); }
+  if(nHeld>=3 && conc<.7){ types.push("분산형");
+    G(`${nHeld}개 종목에 나눠 담았습니다. 자산이 오르내리는 폭이 그만큼 작았어요.`);
+    T(`그런데 5라운드에는 분산해도 다 떨어졌죠. 왜였을까요?`); }
+  if(rumor.length>0 && rumor.length===st.news.length){ types.push("소문 추종형");
+    T(`커뮤니티 정보 ${rumor.length}건 중 ${rumorHit}건 적중. 싼 정보에는 이유가 있었습니다.`);
+    G(`정보를 사서 판단하려 한 시도 자체는 옳았어요.`); }
+  if(disc.length>0 && !types.includes("소문 추종형")){ types.push("근거 기반형");
+    G(`공시를 ${disc.length}건 샀습니다. 값을 치르고 확실한 정보를 택한 판단이에요.`);
+    T(`맞는 정보를 사고도 손해 본 라운드가 있었나요? 왜 그랬을까요?`); }
+  if(st.news.length===0 && nTr>0){ types.push("직관형");
+    T(vague>0? `매수 이유 ${withReason}개 중 ${vague}개가 "느낌"에 가까웠습니다.`
+             : `정보를 한 번도 사지 않고 판단했습니다. 근거는 어디서 왔나요?`);
+    G(`정보 비용을 아꼈습니다. 비용 감각이 있어요.`); }
+  if(panic>=2){ types.push("공포 매도형");
+    T(`떨어진 직후 판 게 ${panic}번, 그중 ${panicUp}번은 다음 라운드에 올랐습니다.`);
+    G(`손실을 키우지 않겠다는 판단은 그 자체로 규율이에요.`); }
+  if(st.spoke){ types.push("주주권 행사");
+    G(`주주총회에서 발언하고 자기 표로 회사의 결정을 바꿨습니다. 오늘 진짜 주주였어요.`); }
+
+  if(!items.length){
+    G(`끝까지 자리를 지키며 8라운드를 함께했습니다.`);
+    T(`다시 한다면 가장 먼저 바꾸고 싶은 판단은 무엇인가요?`);
+  }
+  return { type: types.slice(0,2).join(" · ") || "참여형", items: items.slice(0,4) };
+}
+
+/* ============================ 액션 ============================ */
+let qtyVal = 10, reasonVal = "";
+
+function bindSetup(){
+  const app = document.getElementById("app");
+  // 설정 중에는 저장하지 않는다. 저장 왕복이 입력을 덮어쓰는 사고를 원천 차단한다.
+  app.querySelectorAll(".f-nm").forEach(el=>el.oninput = ()=> setupCount());
+  app.querySelectorAll(".f-sc").forEach(el=>el.oninput = e=>{
+    const v = Math.max(0, Math.min(100, +e.target.value||0));
+    e.target.closest(".srow").querySelector(".seed").textContent = won(500000+v*5000)+"원";
+  });
+  app.onclick = e=>{
+    const b = e.target.closest("[data-a]"); if(!b) return;
+    const a = b.dataset.a;
+    if(a==="qr") return showQR();
+    syncSetupFromDOM();
+    if(a==="add"){ S.students.push(freshStudent(uid(), "", 0)); commit(); }
+    if(a==="del"){ S.students.splice(+b.closest(".srow").dataset.i,1); commit(); }
+    if(a==="start"){
+      const named = S.students.filter(s=>s.name);
+      if(!named.length){ toast("학생 이름을 입력하세요."); return; }
+      const blank = S.students.length - named.length;
+      S.students = named;
+      // 지난 수업의 접속 기록·대기 주문·비공개 정보를 모두 지우고 새로 연다.
+      FB("orders").remove(); FB("msg").remove(); FB("joined").remove(); FB("private").remove();
+      joined = {};
+      S.phase="play"; selected=S.students[0].id; commit();
+      toast(`${named.length}명으로 개장했습니다.` + (blank? ` (이름이 빈 ${blank}칸 제외)` : ""));
+    }
+  };
+  setupCount();
+}
+
+// 화면에 실제로 보이는 입력값만이 진실이다. 상태는 여기서 만들어진다.
+function syncSetupFromDOM(){
+  const rows = [...document.querySelectorAll(".srow")];
+  if(!rows.length) return;
+  S.students = rows.map(row=>{
+    const st = S.students[+row.dataset.i];
+    const name = (row.querySelector(".f-nm")?.value ?? "").trim();
+    const v = Math.max(0, Math.min(100, +(row.querySelector(".f-sc")?.value) || 0));
+    if(st){ st.name = name; st.score = v; st.seed = 500000+v*5000; st.cash = st.seed; return st; }
+    return freshStudent(uid(), name, v);
+  });
+}
+function setupCount(){
+  const el = document.getElementById("cnt"); if(!el) return;
+  const n = [...document.querySelectorAll(".f-nm")].filter(i=>i.value.trim()).length;
+  el.textContent = `이름이 입력된 학생 ${n}명`;
+  el.style.color = n? "var(--navy)" : "var(--rise)";
+}
+
+function bindMain(){
+  const app = document.getElementById("app");
+  const qi = app.querySelector("#qty"), ri = app.querySelector("#reason");
+  if(qi) qi.oninput = e=>{ qtyVal = Math.max(0, Math.floor(+e.target.value||0)); softRefresh(); };
+  if(ri) ri.oninput = e=>{ reasonVal = e.target.value; softRefresh(); };
+
+  app.onclick = e=>{
+    const b = e.target.closest("[data-a]"); if(!b) return;
+    const a = b.dataset.a, st = S.students.find(s=>s.id===selected);
+
+    if(a==="sel"){ selected = b.dataset.id; openStock=null; qtyVal=10; reasonVal=""; peek=false; render(); return; }
+    if(a==="peek"){ peek = !peek; render(); return; }
+    if(a==="open"){ openStock = openStock===b.dataset.k? null : b.dataset.k; qtyVal=10; reasonVal=""; render(); return; }
+    if(a==="q"){ qtyVal = Math.max(0, qtyVal + (+b.dataset.v)); render(); return; }
+    if(a==="qmax"){ qtyVal = Math.floor(st.cash / (S.prices[b.dataset.k]*(1+FEE))); render(); return; }
+    if(a==="buy") return doBuy(st, b.dataset.k);
+    if(a==="sell") return doSell(st, b.dataset.k);
+    if(a==="news") return doNews(st, +b.dataset.i);
+    if(a==="interest") return payInterest();
+    if(a==="close") return closeRound();
+    if(a==="next") return nextRound();
+    if(a==="practice") return startPractice();
+    if(a==="pracend") return endPractice();
+    if(a==="qr") return showQR();
+    if(a==="exp1") return exportSummary();
+    if(a==="exp2") return exportTrades();
+    if(a==="exp3") return exportFeedback();
+    if(a==="back"){ S.phase="play"; commit(); return; }
+    if(a==="reset") return confirmReset();
+    if(a==="setco"){ S.meeting.co = b.dataset.k; S.meeting.a=0; S.meeting.b=0; S.meeting.pick=null; commit(); return; }
+    if(a==="vote"){ S.meeting[b.dataset.p] = Math.max(0, S.meeting[b.dataset.p] + (+b.dataset.d)); pickWinner(); commit(); return; }
+    if(a==="voteclear"){ S.meeting.a=0; S.meeting.b=0; S.meeting.pick=null; commit(); return; }
+    if(a==="pick"){ S.meeting.pick = b.dataset.p; commit(); return; }
+    if(a==="meetdone") return applyMeeting();
+  };
+  app.onchange = e=>{
+    const b = e.target.closest("[data-a='spoke']"); if(!b) return;
+    const s = S.students.find(x=>x.id===b.dataset.id); s.spoke = b.checked; persist();
+  };
+}
+
+function softRefresh(){
+  const st = S.students.find(s=>s.id===selected); if(!st||!openStock) return;
+  const p = S.prices[openStock];
+  const c = document.querySelector(".tform .cost");
+  if(c) c.innerHTML = `매수 ${won(qtyVal*p*(1+FEE))}원 · 매도 ${won(qtyVal*p*(1-FEE))}원 <span style="opacity:.7">(수수료 0.5% 포함)</span>`;
+  const buy = document.querySelector(".buy"), sell = document.querySelector(".sell"), ri = document.querySelector("#reason");
+  if(buy) buy.disabled = !(qtyVal>0 && reasonVal.trim() && st.cash >= qtyVal*p*(1+FEE));
+  if(sell) sell.disabled = !(qtyVal>0 && st.hold[openStock]>=qtyVal);
+  if(ri) ri.classList.toggle("need", !reasonVal.trim());
+}
+
+function doBuy(st,k){
+  const p = S.prices[k], cost = qtyVal*p*(1+FEE);
+  if(qtyVal<=0) return toast("수량을 입력하세요.");
+  if(!reasonVal.trim()) return toast("매수 이유를 반드시 적어야 합니다.");
+  if(st.cash < cost) return toast("예수금이 부족합니다.");
+  st.cash -= cost; st.hold[k] += qtyVal; st.fees += qtyVal*p*FEE;
+  st.trades.push({round:S.round, s:k, type:"buy", qty:qtyVal, price:p, reason:reasonVal.trim()});
+  toast(`${st.name} · ${SNAME[k]} ${qtyVal}주 매수`);
+  qtyVal=10; reasonVal=""; openStock=null; commit();
+}
+function doSell(st,k){
+  if(qtyVal<=0) return toast("수량을 입력하세요.");
+  if(st.hold[k] < qtyVal) return toast("보유 수량이 부족합니다.");
+  const p = S.prices[k];
+  st.cash += qtyVal*p*(1-FEE); st.hold[k] -= qtyVal; st.fees += qtyVal*p*FEE;
+  const last = S.history[S.history.length-1];
+  st.trades.push({round:S.round, s:k, type:"sell", qty:qtyVal, price:p,
+                  reason:reasonVal.trim(), dropBefore: last? last.ch[k]<0 : false});
+  toast(`${st.name} · ${SNAME[k]} ${qtyVal}주 매도`);
+  qtyVal=10; reasonVal=""; openStock=null; commit();
+}
+function doNews(st,i){
+  const p = curRound().paid[i], t = TIERS[p.tier];
+  if(st.cash < t.cost) return toast("예수금이 부족합니다.");
+  if(st.news.some(n=>n.round===S.round)) return toast("이번 라운드에는 이미 구매했습니다.");
+  st.cash -= t.cost;
+  st.news.push({round:S.round, tier:p.tier, s:p.s, hit:p.hit, cost:t.cost});
+  FB(`private/${st.id}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
+  peek = false;
+  toast(`${st.name} 학생 폰으로 정보를 보냈습니다.`);
+  commit();
+}
+// 산 정보의 내용은 상태에 없다. 교사 화면에서만 원본에서 찾아 쓴다.
+function newsText(n){
+  const R = ROUNDS[n.round-1];
+  return (R && R.paid.find(p=>p.tier===n.tier && p.s===n.s) || {}).tx || "";
+}
+function payInterest(){
+  S.students.forEach(s=>{ s.cash += Math.round(s.cash*0.05); });
+  toast("전체 학생에게 예수금의 5% 이자를 지급했습니다."); commit();
+}
+
+function closeRound(){
+  const R = curRound();
+  S.prev = {...S.prices};
+  const applied = {};
+  SK.forEach(k=>{
+    let c = R.ch[k];
+    if(S.vol && S.vol.co===k && S.vol.left>0) c *= 2;
+    applied[k] = c;
+    S.prices[k] = Math.max(100, Math.round(S.prices[k] * (1 + c/100)));
+  });
+  if(S.vol && S.vol.left>0) S.vol.left--;
+  S.history.push({round:S.round, ch:applied, prices:{...S.prices}});
+  S.revealed = true; openStock=null; commit();
+
+  // 판 뒤에 올랐는지 소급 표시
+  S.students.forEach(s=> s.trades.forEach(t=>{
+    if(t.type==="sell" && t.round===S.round-0 && t.dropBefore) t.roseAfter = applied[t.s] > 0;
+  }));
+  persist();
+}
+// 개인 피드백을 각 학생 폰으로 보낸다. 교사 화면과 같은 내용이다.
+function publishFeedback(){
+  S.students.forEach(st=>{
+    const f = feedback(st);
+    FB(`private/${st.id}/feedback`).set({
+      type: f.type,
+      items: f.items,
+      ret: Math.round(retPct(st,S.prices)*10)/10,
+      total: Math.round(total(st,S.prices)),
+      quotes: st.trades.filter(t=>t.reason).slice(-3).map(t=>t.reason)
+    });
+  });
+}
+function nextRound(){
+  if(S.round>=8){ S.phase="debrief"; publishFeedback(); commit(); return; }
+  if(S.round===MEETING_AFTER && !S.meeting.done){ S.phase="meeting"; commit(); return; }
+  S.round++; S.revealed=false; openStock=null; peek=false; commit();
+}
+function pickWinner(){ S.meeting.pick = S.meeting.a===S.meeting.b? null : (S.meeting.a>S.meeting.b? "a":"b"); }
+function applyMeeting(){
+  const co = S.meeting.co, pick = S.meeting.pick;
+  if(pick==="a"){ S.vol = {co, left:2}; toast(`${SNAME[co]} 신사업 투자 가결 — 이후 2라운드 변동폭 2배`); }
+  else{
+    S.students.forEach(s=>{ if(s.hold[co]>0) s.cash += s.hold[co]*500; });
+    S.prices[co] = Math.max(100, S.prices[co]-300);
+    toast(`${SNAME[co]} 배당 가결 — 주당 500원 지급, 주가 300원 하락`);
+  }
+  S.meeting.done = true; S.phase="play"; S.round++; S.revealed=false; commit();
+}
+
+function startPractice(){
+  snapshot = JSON.parse(JSON.stringify(S.students));
+  S.practice = true; toast("연습 라운드 — 거래해도 기록에 남지 않습니다."); commit();
+}
+function endPractice(){
+  if(snapshot) S.students = snapshot;
+  snapshot=null; S.practice=false; selected = S.students[0]?.id ?? null;
+  toast("계좌를 복구했습니다. 본게임을 시작하세요."); commit();
+}
+
+function confirmReset(){
+  overlay(`<h3>전체 초기화</h3>
+    <p>모든 거래 기록과 학생 계좌가 지워지고 설정 화면으로 돌아갑니다. 되돌릴 수 없습니다.</p>
+    <div class="row"><button class="tbtn" data-x="no">취소</button>
+    <button class="tbtn danger" data-x="yes">초기화</button></div>`, x=>{
+      if(x==="yes"){ const names = S.students.map(s=>({n:s.name,sc:s.score})), rev = S.rev||0;
+        while(names.length<7) names.push({n:"",sc:0});
+        S = freshState(); S.rev = rev; S.students = names.map(o=>freshStudent(uid(), o.n, o.sc));
+        selected=null; commit(); }
+    });
+}
+
+/* ============================ 유틸 ============================ */
+// Firebase는 빈 배열·빈 객체를 저장하지 않고 키를 지운다.
+// 불러온 뒤 반드시 되살려야 push()나 인덱싱에서 터지지 않는다.
+function normalize(st){
+  st.students = st.students || [];
+  st.history  = st.history  || [];
+  st.prices   = st.prices   || Object.fromEntries(STOCKS.map(s=>[s.k,s.p0]));
+  st.prev     = st.prev     || {...st.prices};
+  st.meeting  = st.meeting  || {done:false, co:null, a:0, b:0, pick:null};
+  st.students.forEach(s=>{
+    s.trades = s.trades || [];
+    s.news   = s.news   || [];
+    s.hold   = s.hold   || {};
+    SK.forEach(k=>{ s.hold[k] = s.hold[k] || 0; });
+    s.fees   = s.fees   || 0;
+    s.cash   = s.cash   || 0;
+  });
+  return st;
+}
+/* ---------- 결과 내려받기 ---------- */
+function download(name, text){
+  // 엑셀이 한글을 깨뜨리지 않도록 BOM을 붙인다.
+  const blob = new Blob(["﻿"+text], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const csvCell = v => `"${String(v??"").replace(/"/g,'""')}"`;
+const csvRow = arr => arr.map(csvCell).join(",");
+const stamp2 = () => new Date().toISOString().slice(0,10);
+
+function exportSummary(){
+  const head = ["이름","퀴즈점수","시드머니","최종예수금","주식평가액","총자산","수익률(%)",
+                "매매횟수","수수료합계","정보구매수","공시","기사","소문","주총발언","보유종목수","최대집중도(%)"];
+  const rows = S.students.map(st=>{
+    const sv = stockVal(st,S.prices), tot = total(st,S.prices);
+    const held = SK.filter(k=>st.hold[k]>0).length;
+    const conc = sv? Math.round(Math.max(...SK.map(k=>st.hold[k]*S.prices[k]))/sv*100) : 0;
+    const cnt = t => st.news.filter(n=>n.tier===t).length;
+    return csvRow([st.name, st.score, st.seed, Math.round(st.cash), Math.round(sv), Math.round(tot),
+      retPct(st,S.prices).toFixed(1), st.trades.length, Math.round(st.fees), st.news.length,
+      cnt("disc"), cnt("news"), cnt("rumor"), st.spoke?"O":"", held, conc]);
+  });
+  download(`모의투자_요약_${stamp2()}.csv`, [csvRow(head), ...rows].join("\n"));
+}
+
+function exportTrades(){
+  const head = ["이름","라운드","매수매도","종목","수량","단가","금액","매수이유"];
+  const rows = [];
+  S.students.forEach(st=> st.trades.forEach(t=>{
+    rows.push(csvRow([st.name, t.round, t.type==="buy"?"매수":"매도", SNAME[t.s],
+      t.qty, Math.round(t.price), Math.round(t.qty*t.price), t.reason||""]));
+  }));
+  download(`모의투자_거래내역_${stamp2()}.csv`, [csvRow(head), ...rows].join("\n"));
+}
+
+function exportFeedback(){
+  const head = ["이름","수익률(%)","유형","구분","내용"];
+  const rows = [];
+  S.students.forEach(st=>{
+    const f = feedback(st);
+    f.items.forEach(it=> rows.push(csvRow([st.name, retPct(st,S.prices).toFixed(1), f.type,
+      it.kind==="good"?"잘한 것":"생각해볼 것", it.tx.replace(/<[^>]+>/g,"")])));
+  });
+  download(`모의투자_피드백_${stamp2()}.csv`, [csvRow(head), ...rows].join("\n"));
+}
+
+function studentURL(){
+  return location.origin + location.pathname.replace(/teacher\.html$/, "");
+}
+function showQR(){
+  const url = studentURL();
+  const o = document.getElementById("overlay");
+  o.innerHTML = `<div class="modal"><div class="box" style="max-width:520px;text-align:center">
+    <h3 style="font-size:1.3rem">학생 접속</h3>
+    <p style="margin-bottom:14px">폰 카메라로 QR을 찍고, 자기 이름을 누르면 됩니다.</p>
+    <div id="qrbox" style="display:flex;justify-content:center;padding:18px;background:#fff;border-radius:10px"></div>
+    <p class="n" style="margin:14px 0 18px;font-weight:600;word-break:break-all;font-size:1rem;color:var(--navy)">${esc(url)}</p>
+    <div class="row" style="justify-content:center">
+      <button class="tbtn" data-x="copy">주소 복사</button>
+      <button class="tbtn primary" data-x="close">닫기</button></div>
+  </div></div>`;
+  try{ new QRCode(document.getElementById("qrbox"), {text:url, width:280, height:280}); }
+  catch(e){ document.getElementById("qrbox").innerHTML = `<p style="color:#333">QR을 만들지 못했습니다. 위 주소를 직접 알려주세요.</p>`; }
+  o.onclick = e=>{
+    const b = e.target.closest("[data-x]"); if(!b) return;
+    if(b.dataset.x==="copy"){ navigator.clipboard?.writeText(url); toast("주소를 복사했습니다."); return; }
+    o.innerHTML = "";
+  };
+}
+function uid(){ return "s"+Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(msg){
+  clearTimeout(toastT);
+  let t = document.querySelector(".toast");
+  if(!t){ t = document.createElement("div"); t.className="toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  toastT = setTimeout(()=>t.remove(), 2200);
+}
+function overlay(html, cb){
+  const o = document.getElementById("overlay");
+  o.innerHTML = `<div class="modal"><div class="box">${html}</div></div>`;
+  o.onclick = e=>{ const b=e.target.closest("[data-x]"); if(!b) return; o.innerHTML=""; cb(b.dataset.x); };
+}
+
+/* ============================ 시작 ============================ */
+(async function(){
+  render();
+  await initStore();
+  const saved = await store.load();
+  // 개장 전 상태는 복원하지 않는다. 반쯤 채워진 설정 화면을 되살릴 이유가 없고,
+  // 남아 있던 낡은 명단이 새 입력을 밀어내는 사고만 만든다.
+  if(saved && saved.v===1 && saved.students && saved.phase!=="setup"){
+    S = normalize(saved);
+    if(S.students.length && !selected) selected = S.students[0].id;
+  }else{
+    S = freshState();
+    if(saved && saved.rev) S.rev = saved.rev;
+    S.students = Array.from({length:7}, ()=>freshStudent(uid(), "", 0));
+  }
+  render();
+  watchOrders();
+  FB("joined").on("value", s=>{ joined = s.val()||{}; if(S.phase!=="setup") render(); });
+})();
+</script>
+</body>
+</html>
