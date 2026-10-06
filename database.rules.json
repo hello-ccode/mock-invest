@@ -1,0 +1,39 @@
+{
+  "rules": {
+    ".read": "auth != null && auth.uid === 'REPLACE_WITH_TEACHER_UID'",
+    ".write": "auth != null && auth.uid === 'REPLACE_WITH_TEACHER_UID'",
+
+    "pub": {
+      "$token": {
+        "state": { ".read": "auth != null" },
+        "msg": { ".read": "auth != null" },
+        "private": {
+          "$sid": { ".read": "auth != null" }
+        },
+
+        "joined": {
+          "$sid": {
+            ".write": "auth != null && root.child('pub').child($token).child('state').exists()",
+            ".validate": "newData.isBoolean() && $sid.matches(/^s[0-9a-z]{1,12}$/)"
+          }
+        },
+
+        "orders": {
+          "$oid": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('pub').child($token).child('state').exists()",
+            ".validate": "newData.hasChildren(['kind', 'sid', 'round', 'ts'])",
+            "kind":   { ".validate": "newData.isString() && newData.val().matches(/^(buy|sell|news)$/)" },
+            "sid":    { ".validate": "newData.isString() && newData.val().matches(/^s[0-9a-z]{1,12}$/)" },
+            "round":  { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 99" },
+            "ts":     { ".validate": "newData.isNumber()" },
+            "s":      { ".validate": "newData.isString() && newData.val().matches(/^(FOOD|LOGI|MED|GAME|EV)$/)" },
+            "tier":   { ".validate": "newData.isString() && newData.val().matches(/^(disc|news|rumor)$/)" },
+            "qty":    { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000000" },
+            "reason": { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
+    }
+  }
+}

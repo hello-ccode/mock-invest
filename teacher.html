@@ -273,6 +273,15 @@ input,select{font:inherit;color:inherit}
 .quotes h5{font-size:.74rem;color:var(--ink-faint);letter-spacing:.04em;margin:0 0 5px;font-weight:600}
 .quotes p{font-family:"Gowun Batang",serif;font-size:.93rem;color:var(--ink-soft);padding:1px 0}
 
+/* login */
+.login{max-width:380px;margin:14vh auto 0;display:flex;flex-direction:column;gap:10px}
+.login h2{font-family:"Gowun Batang",serif;font-size:1.7rem}
+.login .lede{color:var(--ink-soft);margin-bottom:8px}
+.login form{display:flex;flex-direction:column;gap:10px}
+.login input{width:100%;padding:.7em .85em;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper)}
+.login .err{background:var(--rise-wash);color:var(--rise);border-radius:8px;padding:.6em .85em;font-size:.9rem;font-weight:600}
+.login .tbtn{padding:.7em 1em;font-size:1rem}
+
 .empty{color:var(--ink-faint);font-size:.92rem;text-align:center;padding:24px}
 .warn{background:var(--amber-wash);border-left:3px solid var(--amber);padding:9px 13px;border-radius:0 6px 6px 0;font-size:.86rem;margin-bottom:12px}
 .toast{
@@ -302,6 +311,7 @@ input,select{font:inherit;color:inherit}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -409,12 +419,50 @@ function freshState(){
 /* ============================ 저장 (Firebase) ============================ */
 firebase.initializeApp(firebaseConfig);
 const DB = firebase.database();
+const AUTH = firebase.auth();
+
+// 두 곳에 나눠 저장한다.
+//  rooms/<ROOM>  교사 전용 원본. 실명·퀴즈 점수·거래 이유가 모두 들어 있다. 교사 계정만 열 수 있다.
+//  pub/<TOKEN>   학생이 보는 부분. 학생 접속 주소에 붙은 비밀 코드(TOKEN)를 아는 사람만 열 수 있다.
 const FB = p => DB.ref(`rooms/${ROOM}/${p}`);
+let TOKEN = null;
+const PB = p => DB.ref(`pub/${TOKEN}/${p}`);
+
+function newToken(){
+  const cs = "abcdefghjkmnpqrstuvwxyz23456789", a = new Uint8Array(12);
+  crypto.getRandomValues(a);
+  return Array.from(a, b=>cs[b % cs.length]).join("");
+}
+async function ensureToken(){
+  let t = (await FB("token").get()).val();
+  if(!/^[a-z0-9]{8,40}$/.test(t||"")){ t = newToken(); await FB("token").set(t); }
+  return t;
+}
+
+// 학생 화면이 내려받는 상태. 퀴즈 점수·거래 이유·정답 이력·주총 기록 같은 교사 전용 정보는 싣지 않는다.
+// 개장 전에는 학생 명단도 싣지 않는다.
+function publicState(st){
+  const live = st.phase !== "setup";
+  return {
+    phase:st.phase, round:st.round, revealed:!!st.revealed,
+    prices:st.prices, prev:st.prev, free:st.free||null, offers:st.offers||[],
+    students: live ? st.students.map(s=>({id:s.id, name:s.name, seed:s.seed, cash:s.cash, hold:s.hold})) : []
+  };
+}
+function publishPub(){
+  return PB("state").set(JSON.parse(JSON.stringify(publicState(S)))).catch(e=>toast("학생 화면 연결에 실패했습니다."));
+}
 
 async function initStore(){
   store = {
-    save: st => FB("state").set(JSON.parse(JSON.stringify(st))).catch(e=>toast("저장 실패 — 인터넷을 확인하세요.")),
-    load: async () => { try{ return (await FB("state").get()).val(); }catch(e){ return null; } },
+    save: st => {
+      const full = JSON.parse(JSON.stringify(st)), upd = {};
+      upd[`rooms/${ROOM}/state`] = full;
+      upd[`pub/${TOKEN}/state`] = publicState(full);
+      return DB.ref().update(upd).catch(e=>toast("저장 실패 — 인터넷을 확인하세요."));
+    },
+    // 오류를 삼키지 않는다. 못 읽은 것을 '저장된 게 없다'로 착각하면 새 상태가 기존 기록을 덮어쓴다.
+    load: async () => (await FB("state").get()).val(),
   };
 }
 let saveT=null;
@@ -435,15 +483,22 @@ function stamp(){
 }
 
 /* ---------- 학생 주문 접수 ---------- */
-function watchOrders(){
-  FB("orders").on("child_added", snap=> applyOrder(snap.val(), snap.key));
+let watched = [];
+function watchShared(){
+  watched.forEach(r=>r.off()); watched = [];
+  const orders = PB("orders"), jn = PB("joined");
+  orders.on("child_added", snap=> applyOrder(snap.val(), snap.key),
+            e=>toast("주문을 받지 못하고 있습니다. (권한 오류)"));
+  jn.on("value", s=>{ joined = s.val()||{}; if(S.phase!=="setup") render(); });
+  watched = [orders, jn];
 }
 function applyOrder(o, key){
+  // 주문 경로에 쓰는 값이라 모양이 맞지 않으면 건드리지 않고 지운다.
+  if(!o || !/^s[0-9a-z]{1,12}$/.test(o.sid)) return PB(`orders/${key}`).remove();
   const finish = (text, ok) => {
-    FB(`orders/${key}`).remove();
-    if(o && o.sid) FB(`msg/${o.sid}`).set({text, ok, ts:Date.now()});
+    PB(`orders/${key}`).remove();
+    PB(`msg/${o.sid}`).set({text, ok, ts:Date.now()});
   };
-  if(!o || !o.sid) return FB(`orders/${key}`).remove();
   const st = S.students.find(s=>s.id===o.sid);
   if(!st) return finish("계좌를 찾을 수 없습니다.", false);
   if(S.phase!=="play" || S.revealed) return finish("주문이 마감되었습니다.", false);
@@ -451,7 +506,8 @@ function applyOrder(o, key){
 
   if(o.kind==="buy"){
     const p = S.prices[o.s], cost = o.qty*p*(1+FEE);
-    if(!(o.qty>0)) return finish("수량을 확인하세요.", false);
+    if(!(p>0)) return finish("종목을 확인하세요.", false);
+    if(!Number.isInteger(o.qty) || !(o.qty>0)) return finish("수량을 확인하세요.", false);
     if(!o.reason) return finish("매수 이유를 적어야 합니다.", false);
     if(st.cash < cost) return finish("예수금이 부족합니다.", false);
     st.cash -= cost; st.hold[o.s] += o.qty; st.fees += o.qty*p*FEE;
@@ -460,7 +516,8 @@ function applyOrder(o, key){
   }
   else if(o.kind==="sell"){
     const p = S.prices[o.s];
-    if(!(o.qty>0)) return finish("수량을 확인하세요.", false);
+    if(!(p>0)) return finish("종목을 확인하세요.", false);
+    if(!Number.isInteger(o.qty) || !(o.qty>0)) return finish("수량을 확인하세요.", false);
     if(st.hold[o.s] < o.qty) return finish("보유 수량이 부족합니다.", false);
     st.cash += o.qty*p*(1-FEE); st.hold[o.s] -= o.qty; st.fees += o.qty*p*FEE;
     const last = S.history[S.history.length-1];
@@ -478,7 +535,7 @@ function applyOrder(o, key){
     st.cash -= t.cost;
     // 공유 상태에는 '무엇을 샀는지'만 남긴다. 내용(tx)을 여기 넣으면 모든 학생이 내려받는다.
     st.news.push({round:S.round, tier:p.tier, s:p.s, hit:p.hit, cost:t.cost});
-    FB(`private/${o.sid}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
+    PB(`private/${o.sid}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
     finish(`정보를 받았습니다. 아래에서 확인하세요.`, true);
   }
   else return finish("알 수 없는 주문입니다.", false);
@@ -537,6 +594,7 @@ function topBar(){
     <span class="phasechip">접속 ${S.students.filter(s=>joined[s.id]).length}/${S.students.length}</span>
     ${S.phase!=="debrief"? `<button class="tbtn" data-a="interest">이자 일괄 지급 5%</button>`:""}
     <button class="tbtn" data-a="reset">전체 초기화</button>
+    <button class="tbtn" data-a="logout">로그아웃</button>
     ${right}
   </div></div>`;
 }
@@ -570,6 +628,7 @@ function viewSetup(){
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
       <button class="tbtn" data-a="qr">학생 접속 QR 보기</button>
+      <button class="tbtn" data-a="logout">로그아웃</button>
     </div>
     <div class="formula">
       <strong>시드머니 = 500,000원 + (퀴즈 점수 × 5,000원)</strong><br>
@@ -908,6 +967,7 @@ function bindSetup(){
     const b = e.target.closest("[data-a]"); if(!b) return;
     const a = b.dataset.a;
     if(a==="qr") return showQR();
+    if(a==="logout") return doLogout();
     syncSetupFromDOM();
     if(a==="add"){ S.students.push(freshStudent(uid(), "", 0)); commit(); }
     if(a==="del"){ S.students.splice(+b.closest(".srow").dataset.i,1); commit(); }
@@ -917,7 +977,7 @@ function bindSetup(){
       const blank = S.students.length - named.length;
       S.students = named;
       // 지난 수업의 접속 기록·대기 주문·비공개 정보를 모두 지우고 새로 연다.
-      FB("orders").remove(); FB("msg").remove(); FB("joined").remove(); FB("private").remove();
+      PB("orders").remove(); PB("msg").remove(); PB("joined").remove(); PB("private").remove();
       joined = {};
       S.phase="play"; selected=S.students[0].id; commit();
       toast(`${named.length}명으로 개장했습니다.` + (blank? ` (이름이 빈 ${blank}칸 제외)` : ""));
@@ -969,6 +1029,7 @@ function bindMain(){
     if(a==="practice") return startPractice();
     if(a==="pracend") return endPractice();
     if(a==="qr") return showQR();
+    if(a==="logout") return doLogout();
     if(a==="exp1") return exportSummary();
     if(a==="exp2") return exportTrades();
     if(a==="exp3") return exportFeedback();
@@ -1024,7 +1085,7 @@ function doNews(st,i){
   if(st.news.some(n=>n.round===S.round)) return toast("이번 라운드에는 이미 구매했습니다.");
   st.cash -= t.cost;
   st.news.push({round:S.round, tier:p.tier, s:p.s, hit:p.hit, cost:t.cost});
-  FB(`private/${st.id}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
+  PB(`private/${st.id}/news/r${S.round}`).set({round:S.round, tier:p.tier, s:p.s, tx:p.tx});
   peek = false;
   toast(`${st.name} 학생 폰으로 정보를 보냈습니다.`);
   commit();
@@ -1063,7 +1124,7 @@ function closeRound(){
 function publishFeedback(){
   S.students.forEach(st=>{
     const f = feedback(st);
-    FB(`private/${st.id}/feedback`).set({
+    PB(`private/${st.id}/feedback`).set({
       type: f.type,
       items: f.items,
       ret: Math.round(retPct(st,S.prices)*10)/10,
@@ -1107,8 +1168,17 @@ function confirmReset(){
       if(x==="yes"){ const names = S.students.map(s=>({n:s.name,sc:s.score})), rev = S.rev||0;
         while(names.length<7) names.push({n:"",sc:0});
         S = freshState(); S.rev = rev; S.students = names.map(o=>freshStudent(uid(), o.n, o.sc));
-        selected=null; commit(); }
+        selected=null; renewToken(); commit(); }
     });
+}
+// 초기화하면 학생용 공유 데이터를 통째로 지우고 접속 코드를 바꾼다. 지난 수업의 주소로는 더 이상 열리지 않는다.
+function renewToken(){
+  const old = TOKEN;
+  TOKEN = newToken();
+  FB("token").set(TOKEN).catch(e=>toast("새 학생 코드를 저장하지 못했습니다."));
+  DB.ref(`pub/${old}`).remove().catch(e=>{});
+  watchShared();
+  toast("학생 접속 QR이 새로 만들어졌습니다. 다시 보여주세요.");
 }
 
 /* ============================ 유틸 ============================ */
@@ -1179,15 +1249,17 @@ function exportFeedback(){
   download(`모의투자_피드백_${stamp2()}.csv`, [csvRow(head), ...rows].join("\n"));
 }
 
+// 주소 끝의 #코드가 열쇠다. 코드를 모르면 학생 화면은 명단을 내려받지 못한다.
 function studentURL(){
-  return location.origin + location.pathname.replace(/teacher\.html$/, "");
+  return location.origin + location.pathname.replace(/teacher(\.html)?$/, "") + "#" + TOKEN;
 }
 function showQR(){
   const url = studentURL();
   const o = document.getElementById("overlay");
   o.innerHTML = `<div class="modal"><div class="box" style="max-width:520px;text-align:center">
     <h3 style="font-size:1.3rem">학생 접속</h3>
-    <p style="margin-bottom:14px">폰 카메라로 QR을 찍고, 자기 이름을 누르면 됩니다.</p>
+    <p style="margin-bottom:14px">폰 카메라로 QR을 찍고, 자기 이름을 누르면 됩니다.<br>
+      <span style="font-size:.86rem;color:var(--ink-faint)">이 QR(주소)로만 들어올 수 있어요. 학생이 아닌 사람에게는 보내지 마세요.</span></p>
     <div id="qrbox" style="display:flex;justify-content:center;padding:18px;background:#fff;border-radius:10px"></div>
     <p class="n" style="margin:14px 0 18px;font-weight:600;word-break:break-all;font-size:1rem;color:var(--navy)">${esc(url)}</p>
     <div class="row" style="justify-content:center">
@@ -1218,10 +1290,61 @@ function overlay(html, cb){
 }
 
 /* ============================ 시작 ============================ */
-(async function(){
+/* ---------- 로그인 ---------- */
+// 로그인은 Firebase 계정으로 서버가 확인한다. 데이터베이스 규칙이 이 계정(UID)만 교사로 인정한다.
+function authMsg(er){
+  const c = (er && er.code) || "";
+  if(/invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c)) return "이메일 또는 비밀번호가 맞지 않습니다.";
+  if(c==="auth/too-many-requests") return "시도가 너무 많습니다. 잠시 뒤에 다시 해보세요.";
+  if(c==="auth/network-request-failed") return "인터넷 연결을 확인하세요.";
+  if(c==="auth/operation-not-allowed") return "Firebase에서 이메일/비밀번호 로그인이 아직 켜져 있지 않습니다.";
+  return `로그인하지 못했습니다. (${c||"알 수 없는 오류"})`;
+}
+function showLogin(err, email){
+  document.getElementById("app").innerHTML = `<div class="wrap"><div class="login">
+    <h2>한빛증권 · 교사용</h2>
+    <p class="lede">교사 계정으로 로그인하세요.</p>
+    <form id="lg">
+      <input id="lg-id" type="email" name="username" autocomplete="username" placeholder="이메일" value="${esc(email||"")}" required>
+      <input id="lg-pw" type="password" name="password" autocomplete="current-password" placeholder="비밀번호" required>
+      ${err? `<p class="err">${esc(err)}</p>`:""}
+      <button class="tbtn primary" type="submit">로그인</button>
+    </form></div></div>`;
+  const f = document.getElementById("lg");
+  document.getElementById(email? "lg-pw" : "lg-id").focus();
+  f.onsubmit = async e=>{
+    e.preventDefault();
+    const em = document.getElementById("lg-id").value.trim(), pw = document.getElementById("lg-pw").value;
+    const b = f.querySelector("button"); b.disabled = true; b.textContent = "확인 중…";
+    try{ await AUTH.signInWithEmailAndPassword(em, pw); }   // 성공하면 onAuthStateChanged가 boot()를 부른다
+    catch(er){ showLogin(authMsg(er), em); }
+  };
+}
+function doLogout(){
+  const done = ()=>location.reload();
+  AUTH.signOut().then(done, done);
+}
+function showFatal(e){
+  const msg = String((e && (e.code || e.message)) || e);
+  const denied = /permission[_ -]denied/i.test(msg), u = AUTH.currentUser;
+  document.getElementById("app").innerHTML = `<div class="wrap"><div class="login">
+    <h2>접속하지 못했습니다</h2>
+    <p class="lede">${denied
+      ? "이 계정에는 데이터를 볼 권한이 없습니다. Firebase 규칙에 아래 UID가 교사로 등록되어 있는지 확인하세요."
+      : "데이터를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도하세요."}</p>
+    ${denied && u? `<p class="n" style="word-break:break-all">내 UID: ${esc(u.uid)}</p>`:""}
+    <button class="tbtn primary" onclick="location.reload()">다시 시도</button>
+    <button class="tbtn" onclick="doLogout()">로그아웃</button></div></div>`;
+}
+
+async function boot(){
   render();
-  await initStore();
-  const saved = await store.load();
+  let saved;
+  try{
+    await initStore();
+    TOKEN = await ensureToken();
+    saved = await store.load();
+  }catch(e){ return showFatal(e); }
   // 개장 전 상태는 복원하지 않는다. 반쯤 채워진 설정 화면을 되살릴 이유가 없고,
   // 남아 있던 낡은 명단이 새 입력을 밀어내는 사고만 만든다.
   if(saved && saved.v===1 && saved.students && saved.phase!=="setup"){
@@ -1233,9 +1356,17 @@ function overlay(html, cb){
     S.students = Array.from({length:7}, ()=>freshStudent(uid(), "", 0));
   }
   render();
-  watchOrders();
-  FB("joined").on("value", s=>{ joined = s.val()||{}; if(S.phase!=="setup") render(); });
-})();
+  publishPub();
+  watchShared();
+}
+
+let booted = false;
+// 창을 닫으면 로그아웃된다. 교실 공용 컴퓨터에 로그인 상태가 남지 않게 한다.
+AUTH.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(e=>{});
+AUTH.onAuthStateChanged(user=>{
+  if(user && !user.isAnonymous){ if(!booted){ booted = true; boot(); } }
+  else if(!booted) showLogin();
+});
 </script>
 </body>
 </html>

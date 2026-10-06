@@ -166,6 +166,7 @@ section{margin-top:14px}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="config.js"></script>
 <script>
 const STOCKS=[
@@ -189,26 +190,54 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 
 firebase.initializeApp(firebaseConfig);
 const DB=firebase.database();
-const R=p=>DB.ref(`rooms/${ROOM}/${p}`);
+const AUTH=firebase.auth();
 
-let ST=null, MY=null, mine=[], FBK=null, openK=null, qty=10, reason="", toastT=null, sending=false;
+// 선생님 화면의 QR(주소) 끝에 붙은 #코드가 열쇠다. 코드가 없거나 틀리면 아무 정보도 내려받지 못한다.
+let TOKEN=(location.hash||"").replace(/^#/,"");
+try{ if(TOKEN) localStorage.setItem("hb_room",TOKEN); else TOKEN=localStorage.getItem("hb_room")||""; }catch(e){}
+const R=p=>DB.ref(`pub/${TOKEN}/${p}`);
+
+let ST=null, loaded=false, MY=null, mine=[], FBK=null, openK=null, qty=10, reason="", toastT=null, sending=false;
 let loginName="", loginErr="", showList=false;
 try{ MY=localStorage.getItem("hb_sid"); }catch(e){}
 
-R("state").on("value", s=>{ ST=s.val(); draw(); });
-R("msg").on("value", s=>{
-  const m=(s.val()||{})[MY]; if(!m||!m.ts) return;
-  let last=0; try{ last=+localStorage.getItem("hb_msg")||0; }catch(e){}
-  if(m.ts>last){ try{localStorage.setItem("hb_msg",m.ts);}catch(e){} toast(m.text, !m.ok); }
-});
+function say(msg){ document.getElementById("app").innerHTML=`<div class="wait">${esc(msg)}</div>`; }
+function permErr(){ say("접속 권한이 없습니다. 선생님께 새 QR을 받으세요."); }
+
+let newsRefs=[];
 function watchNews(){
+  newsRefs.forEach(r=>r.off()); newsRefs=[];
   if(!MY) return;
-  R(`private/${MY}/news`).on("value", s=>{
+  const a=R(`private/${MY}/news`), b=R(`private/${MY}/feedback`);
+  a.on("value", s=>{
     mine = Object.values(s.val()||{}).sort((a,b)=>a.round-b.round); draw();
-  });
-  R(`private/${MY}/feedback`).on("value", s=>{ FBK = s.val(); draw(); });
+  }, permErr);
+  b.on("value", s=>{ FBK = s.val(); draw(); }, permErr);
+  newsRefs=[a,b];
 }
-watchNews();
+
+let started=false;
+function start(){
+  if(started) return; started=true;
+  R("state").on("value", s=>{ ST=s.val(); loaded=true; draw(); }, permErr);
+  R("msg").on("value", s=>{
+    const m=(s.val()||{})[MY]; if(!m||!m.ts) return;
+    let last=0; try{ last=+localStorage.getItem("hb_msg")||0; }catch(e){}
+    if(m.ts>last){ try{localStorage.setItem("hb_msg",m.ts);}catch(e){} toast(m.text, !m.ok); }
+  }, permErr);
+  watchNews();
+}
+// 로그인 창은 없다. 익명 계정으로 들어가고, 누구인지는 아래에서 이름으로 고른다.
+if(!/^[a-z0-9]{8,40}$/i.test(TOKEN)){
+  say("선생님이 보여준 QR 코드로 접속해 주세요.");
+}else{
+  AUTH.onAuthStateChanged(u=>{
+    if(u) start();
+    else AUTH.signInAnonymously().catch(e=>say(
+      e && e.code==="auth/operation-not-allowed" ? "접속 설정이 아직 끝나지 않았습니다. 선생님께 알려주세요."
+      : "연결하지 못했습니다. 인터넷을 확인하고 새로고침 하세요."));
+  });
+}
 
 // Firebase는 구멍 난 배열을 객체로 돌려주기도 한다. 양쪽 다 받아준다.
 function roster(){ const s=ST&&ST.students; return Array.isArray(s)? s : Object.values(s||{}); }
@@ -216,7 +245,10 @@ function me(){ return roster().find(s=>s.id===MY) || null; }
 
 function draw(){
   const app=document.getElementById("app");
-  if(!ST || ST.phase==="setup"){
+  if(!ST){
+    say(loaded ? "이 주소는 더 이상 사용할 수 없습니다. 선생님께 새 QR을 받으세요." : "연결 중…"); return;
+  }
+  if(ST.phase==="setup"){
     app.innerHTML=`<div class="wait">선생님이 개장하기를 기다리는 중…</div>`; return;
   }
   if(!MY || !me()){ app.innerHTML=viewLogin(); return bind(); }
@@ -373,7 +405,7 @@ function bind(){
     const a=b.dataset.a, m=me();
     if(a==="togglelist"){ showList=!showList; draw(); return; }
     if(a==="pick"){ loginErr=""; loginName=""; showList=false; claim(b.dataset.id); return; }
-    if(a==="out"){ try{localStorage.removeItem("hb_sid");}catch(e){} MY=null; mine=[]; FBK=null;
+    if(a==="out"){ try{localStorage.removeItem("hb_sid");}catch(e){} MY=null; mine=[]; FBK=null; watchNews();
       loginName=""; loginErr=""; showList=false; draw(); return; }
     if(a==="open"){ openK=openK===b.dataset.k?null:b.dataset.k; qty=10; reason=""; draw(); return; }
     if(a==="q"){ qty=Math.max(0,qty+(+b.dataset.v)); draw(); return; }
