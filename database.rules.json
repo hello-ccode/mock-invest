@@ -11,6 +11,29 @@
           "$sid": { ".read": "auth != null" }
         },
 
+        "quiz": {
+          "live": { ".read": "auth != null" },
+          "players": {
+            ".read": "auth != null",
+            "$sid": {
+              ".write": "auth != null && !data.exists() && newData.exists() && root.child('pub').child($token).child('quiz/live/status').exists() && root.child('pub').child($token).child('quiz/live/status').val() !== 'done'",
+              ".validate": "newData.hasChildren(['name', 'uid', 'ts']) && $sid.matches(/^s[0-9a-z]{1,12}$/)",
+              "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12" },
+              "uid":  { ".validate": "newData.isString() && newData.val() === auth.uid" },
+              "ts":   { ".validate": "newData.isNumber()" },
+              "$other": { ".validate": false }
+            }
+          },
+          "answers": {
+            "$qk": {
+              "$sid": {
+                ".write": "auth != null && !data.exists() && newData.exists() && root.child('pub').child($token).child('quiz/players').child($sid).child('uid').val() === auth.uid && root.child('pub').child($token).child('quiz/live/status').val() === 'q' && root.child('pub').child($token).child('quiz/live/qk').val() === $qk && now <= root.child('pub').child($token).child('quiz/live/endsAt').val() + 2000",
+                ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+              }
+            }
+          }
+        },
+
         "joined": {
           "$sid": {
             ".write": "auth != null && root.child('pub').child($token).child('state').exists()",

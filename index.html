@@ -17,6 +17,7 @@
   --rise:#D0342C; --rise-wash:#FCEEEC;
   --fall:#1462B8; --fall-wash:#EAF1FA;
   --amber:#8A5A00; --amber-wash:#F7EFDF;
+  --ok:#1F7A4D; --ok-wash:#E7F4EC;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
@@ -158,6 +159,37 @@ section{margin-top:14px}
   font-weight:600;max-width:90vw;text-align:center}
 .toast.bad{background:var(--rise)}
 .wait{text-align:center;padding:70px 20px;color:var(--ink-faint)}
+
+/* quiz */
+.qz{padding:20px 0 34px;display:flex;flex-direction:column;gap:14px}
+.qz h2{font-family:"Gowun Batang",serif;font-size:1.45rem;text-align:center}
+.qz .lede{text-align:center;color:var(--ink-soft);font-size:.94rem}
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink-soft);font-size:.9rem}
+.qsec{font-size:1.5rem;color:var(--navy)} .qsec.hurry{color:var(--rise)}
+.qbar{height:12px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--navy);transform-origin:left center}
+.qbar.hurry i{background:var(--rise)}
+.qtext{font-size:1.16rem;font-weight:700;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.qopts{display:flex;flex-direction:column;gap:10px}
+.qopt{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;background:var(--paper);
+  border:2px solid var(--line-strong);border-radius:12px;padding:14px;font-size:1.02rem;font-weight:600}
+.qopt:active:not(:disabled){background:var(--surface-2)}
+.qopt:disabled{cursor:default}
+.qopt.mine{border-color:var(--navy);background:var(--navy-wash)}
+.qopt.dim{opacity:.45}
+.qopt.right{border-color:var(--ok);background:var(--ok-wash);opacity:1}
+.qopt.wrong{border-color:var(--rise);background:var(--rise-wash);opacity:1}
+.ob{display:inline-flex;align-items:center;justify-content:center;width:1.9em;height:1.9em;border-radius:8px;color:#fff;font-weight:700}
+.ob.o1{background:#D0342C} .ob.o2{background:#1462B8} .ob.o3{background:#B07800} .ob.o4{background:#1F7A4D} .ob.o5{background:#6B4FA0}
+.qlead{text-align:center;padding:56px 0;font-family:"Gowun Batang",serif;font-size:1.5rem;font-weight:700}
+.qlead .n{display:block;font-family:"IBM Plex Mono",monospace;font-size:4.2rem;color:var(--navy);line-height:1.2}
+.qres{text-align:center;padding:22px 16px;border-radius:14px;font-weight:600}
+.qres b{display:block;font-size:1.6rem;margin-bottom:4px}
+.qres.ok{background:var(--ok-wash);color:var(--ok)} .qres.no{background:var(--rise-wash);color:var(--rise)}
+.qres.wait{background:var(--surface-2);color:var(--ink-soft)}
+.pchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pchip{background:var(--paper);border:1px solid var(--line-strong);border-radius:999px;padding:.25em .75em;font-size:.88rem;font-weight:600}
+.pchip.me{background:var(--navy);color:#fff;border-color:var(--navy)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -196,6 +228,8 @@ const AUTH=firebase.auth();
 let TOKEN=(location.hash||"").replace(/^#/,"");
 try{ if(TOKEN) localStorage.setItem("hb_room",TOKEN); else TOKEN=localStorage.getItem("hb_room")||""; }catch(e){}
 const R=p=>DB.ref(`pub/${TOKEN}/${p}`);
+// 같은 탭에서 #코드만 다른 새 QR 주소를 열면 페이지를 다시 읽지 않는다. 코드가 바뀌면 새로 연다.
+window.addEventListener("hashchange", ()=>location.reload());
 
 let ST=null, loaded=false, MY=null, mine=[], FBK=null, openK=null, qty=10, reason="", toastT=null, sending=false;
 let loginName="", loginErr="", showList=false;
@@ -208,12 +242,13 @@ let newsRefs=[];
 function watchNews(){
   newsRefs.forEach(r=>r.off()); newsRefs=[];
   if(!MY) return;
-  const a=R(`private/${MY}/news`), b=R(`private/${MY}/feedback`);
+  const a=R(`private/${MY}/news`), b=R(`private/${MY}/feedback`), c=R(`private/${MY}/quiz`);
   a.on("value", s=>{
     mine = Object.values(s.val()||{}).sort((a,b)=>a.round-b.round); draw();
   }, permErr);
   b.on("value", s=>{ FBK = s.val(); draw(); }, permErr);
-  newsRefs=[a,b];
+  c.on("value", s=>{ QRES = s.val(); if(qShown!=="join") draw(); }, ()=>{});
+  newsRefs=[a,b,c];
 }
 
 let started=false;
@@ -225,6 +260,10 @@ function start(){
     let last=0; try{ last=+localStorage.getItem("hb_msg")||0; }catch(e){}
     if(m.ts>last){ try{localStorage.setItem("hb_msg",m.ts);}catch(e){} toast(m.text, !m.ok); }
   }, permErr);
+  // 퀴즈 경로를 못 읽어도(규칙이 아직 옛것이어도) 모의투자는 그대로 쓸 수 있게 오류는 무시한다.
+  DB.ref(".info/serverTimeOffset").on("value", s=>{ offset=s.val()||0; });
+  R("quiz/live").on("value", s=>{ QL=s.val(); draw(); }, ()=>{});
+  R("quiz/players").on("value", s=>{ QP=s.val()||{}; if(qShown!=="join") draw(); }, ()=>{});
   watchNews();
 }
 // 로그인 창은 없다. 익명 계정으로 들어가고, 누구인지는 아래에서 이름으로 고른다.
@@ -249,10 +288,156 @@ function draw(){
     say(loaded ? "이 주소는 더 이상 사용할 수 없습니다. 선생님께 새 QR을 받으세요." : "연결 중…"); return;
   }
   if(ST.phase==="setup"){
+    if(QL && QL.status){ app.innerHTML=viewQuiz(); bindQuiz(); return; }
+    qShown="";
     app.innerHTML=`<div class="wait">선생님이 개장하기를 기다리는 중…</div>`; return;
   }
+  qShown="";
   if(!MY || !me()){ app.innerHTML=viewLogin(); return bind(); }
+  // 퀴즈에서 바로 넘어온 학생은 이름을 고르지 않으므로 여기서 접속 표시를 남긴다.
+  if(markedJoined!==MY){ markedJoined=MY; R(`joined/${MY}`).set(true).catch(()=>{}); }
   app.innerHTML=viewMain(); bind();
+}
+
+/* ---------- 퀴즈 ---------- */
+// 선생님 화면이 문제를 하나씩 내려보낸다. 정답은 시간이 끝난 뒤에만 온다.
+// 입장할 때 받은 번호(MY)가 개장 후 모의투자 계좌 번호가 되어, 같은 휴대폰이 바로 자기 계좌로 들어간다.
+const CIRCLED=["①","②","③","④","⑤"];
+let QL=null, QP={}, QRES=null, qShown="", qName="", qErr="", joining=false, qRaf=0, qIv=0, offset=0, markedJoined=null;
+let myPick=null; try{ myPick=JSON.parse(localStorage.getItem("hb_qpick")||"null"); }catch(e){}
+const serverNow=()=>Date.now()+offset;
+const pickedNow=()=> myPick && QL && myPick.id===QL.id && myPick.qk===QL.qk ? myPick.k : 0;
+function quizJoined(){ const p=MY&&QP[MY], u=AUTH.currentUser; return !!(p && u && p.uid===u.uid); }
+
+function viewQuiz(){
+  const n=QL.n||0;
+  if(!quizJoined()){
+    if(QL.status==="done"){ qShown="over";
+      return `<div class="wrap"><div class="qz"><h2>퀴즈가 끝났어요</h2><p class="lede">선생님이 모의투자를 열 때까지 기다려 주세요.</p></div></div>`; }
+    qShown="join";
+    return `<div class="wrap"><div class="login">
+      <h2>경제 퀴즈</h2><p>자기 이름을 입력하고 입장하세요.</p>
+      <form id="qf" class="lf" autocomplete="off">
+        <input id="qn" class="nminput" placeholder="이름" maxlength="12" value="${esc(qName)}"
+               autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="enter" type="submit" ${joining?"disabled":""}>입장</button>
+      </form>
+      ${qErr? `<p class="lerr">${esc(qErr)}</p>`:""}
+      ${QL.status!=="lobby"? `<p class="secret">퀴즈가 이미 시작됐어요. 들어가면 지금 문제부터 풀 수 있어요.</p>`:""}
+    </div></div>`;
+  }
+  const me=QP[MY];
+  if(QL.status==="lobby"){ qShown="lobby";
+    const list=Object.entries(QP).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+    return `<div class="wrap"><div class="qz">
+      <h2>${esc(me.name)}님, 입장 완료!</h2>
+      <p class="lede">선생님이 시작하면 문제가 나와요. ${n}문제이고 문제마다 시간 제한이 있어요.</p>
+      <p class="qmeta" style="justify-content:center">입장 ${list.length} / ${QL.expect||"?"}명</p>
+      <div class="pchips">${list.map(([sid,p])=>`<span class="pchip ${sid===MY?"me":""}">${esc(p.name)}</span>`).join("")}</div>
+    </div></div>`;
+  }
+  if(QL.status==="q"){
+    const now=serverNow();
+    if(now<QL.startsAt){ qShown="lead";
+      return `<div class="wrap"><div class="qz"><div class="qlead">문제 ${QL.idx+1} / ${n}
+        <span class="n" id="qlead">${Math.ceil((QL.startsAt-now)/1000)}</span>준비하세요!</div></div></div>`; }
+    const left=Math.max(0,QL.endsAt-now), picked=pickedNow();
+    qShown= left>0 ? "q" : "qover";
+    return `<div class="wrap"><div class="qz">
+      <div class="qmeta"><span>문제 ${QL.idx+1} / ${n}</span><span class="qsec" id="qsec">${Math.ceil(left/1000)}초</span></div>
+      <div class="qbar" id="qbar"><i style="transform:scaleX(${left/(QL.dur*1000)})"></i></div>
+      <div class="qtext">${esc(QL.q.text)}</div>
+      <div class="qopts">${QL.q.opts.map((o,i)=>`
+        <button class="qopt ${picked===i+1?"mine":picked?"dim":""}" data-a="qpick" data-k="${i+1}" ${picked||!left?"disabled":""}>
+          <span class="ob o${i+1}">${CIRCLED[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+      <p class="secret">${picked? "제출했어요! 시간이 끝나면 정답이 나와요." : left? "답을 고르세요. 한 번 고르면 바꿀 수 없어요." : "시간이 끝났어요."}</p>
+    </div></div>`;
+  }
+  if(QL.status==="reveal"){ qShown="reveal";
+    if(!QL.ans) return `<div class="wrap"><div class="qz"><div class="qres wait"><b>채점 중…</b>잠시만 기다리세요.</div></div></div>`;
+    const picked=pickedNow(), ok=picked===QL.ans;
+    const sofar= QRES && QRES.done===QL.idx+1 ? `<p class="qmeta" style="justify-content:center">지금까지 ${QRES.correct}개 정답 · ${QL.idx+1}/${n}문제</p>` : "";
+    return `<div class="wrap"><div class="qz">
+      <div class="qres ${ok?"ok":"no"}"><b>${!picked? "시간 안에 못 골랐어요" : ok? "정답!" : "아쉬워요"}</b>
+        정답은 ${CIRCLED[QL.ans-1]} ${esc(QL.q.opts[QL.ans-1])}</div>
+      ${sofar}
+      <div class="qtext">${esc(QL.q.text)}</div>
+      <div class="qopts">${QL.q.opts.map((o,i)=>`
+        <button class="qopt ${i+1===QL.ans?"right":picked===i+1?"wrong":"dim"}" disabled>
+          <span class="ob o${i+1}">${CIRCLED[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+      <p class="secret">선생님이 다음 문제를 열 때까지 기다려 주세요.</p>
+    </div></div>`;
+  }
+  // done
+  qShown="done";
+  // 선생님이 중간에 끝내면 실제로 푼 문제 수가 기준이다.
+  const asked= (QRES && QRES.done) || n;
+  const c= QRES ? QRES.correct : null, sc= c===null||!asked ? null : Math.round(c*100/asked);
+  return `<div class="wrap"><div class="qz">
+    <div class="qres ok"><b>퀴즈 끝!</b>${c===null? "결과를 정리하는 중이에요." : `${asked}문제 중 ${c}개 정답`}</div>
+    ${sc!==null? `<p class="lede">시드머니 <strong class="n">${won(500000+sc*5000)}원</strong>으로 모의투자를 시작해요.</p>`:""}
+    <p class="secret">선생님이 모의투자를 열면 이 화면이 바로 바뀌어요.</p>
+  </div></div>`;
+}
+function bindQuiz(){
+  const app=document.getElementById("app");
+  const f=app.querySelector("#qf");
+  if(f){ const inp=app.querySelector("#qn");
+    inp.oninput=e=>{ qName=e.target.value; };
+    f.onsubmit=e=>{ e.preventDefault(); joinQuiz(inp.value); };
+    setTimeout(()=>inp.focus(),50); }
+  app.onclick=e=>{ const b=e.target.closest("[data-a]"); if(b && b.dataset.a==="qpick") pickAnswer(+b.dataset.k); };
+  quizLoop();
+}
+async function joinQuiz(raw){
+  if(joining) return;
+  const name=String(raw||"").trim().replace(/\s+/g," ");
+  qName=name;
+  if(!name){ qErr="이름을 입력하세요."; return draw(); }
+  if(Object.values(QP).some(p=>norm(p.name)===norm(name))){
+    qErr="이미 같은 이름으로 들어온 사람이 있어요. 동명이인이면 이름 뒤에 숫자를 붙여 주세요."; return draw(); }
+  joining=true; qErr=""; draw();
+  const sid="s"+Math.random().toString(36).slice(2,9);
+  try{
+    await R(`quiz/players/${sid}`).set({name, uid:AUTH.currentUser.uid, ts:Date.now()});
+    MY=sid; try{ localStorage.setItem("hb_sid",MY); }catch(e){}
+    qName=""; watchNews();
+  }catch(e){ qErr="입장하지 못했어요. 선생님께 알려 주세요."; }
+  joining=false; draw();
+}
+function pickAnswer(k){
+  if(!QL || QL.status!=="q" || pickedNow()) return;
+  const now=serverNow(); if(now<QL.startsAt || now>QL.endsAt) return;
+  myPick={id:QL.id, qk:QL.qk, k};
+  try{ localStorage.setItem("hb_qpick",JSON.stringify(myPick)); }catch(e){}
+  draw();
+  R(`quiz/answers/${QL.qk}/${MY}`).set(k).catch(()=>{
+    myPick=null; try{ localStorage.removeItem("hb_qpick"); }catch(e){}
+    toast("제출하지 못했어요. 시간이 끝났을 수 있어요.", true); draw();
+  });
+}
+// 시간 바와 남은 초는 서버 시각으로 매 프레임 계산한다. 모든 휴대폰과 교실 화면이 같은 순간에 끝난다.
+function quizTick(){   // 계속 돌아야 하면 true
+  if(!QL || QL.status!=="q" || !quizJoined()) return false;
+  const now=serverNow();
+  const want= now<QL.startsAt ? "lead" : now<=QL.endsAt ? "q" : "qover";
+  if(want!==qShown){ draw(); return false; }   // draw()가 루프를 새로 시작한다
+  if(want==="lead"){ const el=document.getElementById("qlead"); if(el) el.textContent=Math.ceil((QL.startsAt-now)/1000); }
+  else if(want==="q"){
+    const left=QL.endsAt-now, hurry=left<5000;
+    const bar=document.getElementById("qbar"), sec=document.getElementById("qsec");
+    if(bar){ bar.firstElementChild.style.transform=`scaleX(${left/(QL.dur*1000)})`; bar.classList.toggle("hurry",hurry); }
+    if(sec){ sec.textContent=Math.ceil(left/1000)+"초"; sec.classList.toggle("hurry",hurry); }
+  }
+  else return false;
+  return true;
+}
+function quizLoop(){
+  cancelAnimationFrame(qRaf); clearInterval(qIv);
+  const frame=()=>{ if(quizTick()) qRaf=requestAnimationFrame(frame); };
+  qRaf=requestAnimationFrame(frame);
+  // 화면이 꺼졌다 켜지거나 다른 앱에 다녀오면 requestAnimationFrame이 멈춰 있다. 문제 전환은 타이머로도 챙긴다.
+  const iv=setInterval(()=>{ if(!quizTick()) clearInterval(iv); },250); qIv=iv;
 }
 
 function viewLogin(){

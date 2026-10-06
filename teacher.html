@@ -15,6 +15,7 @@
   --rise:#D0342C; --rise-wash:#FCEEEC;
   --fall:#1462B8; --fall-wash:#EAF1FA;
   --amber:#8A5A00; --amber-wash:#F7EFDF;
+  --ok:#1F7A4D; --ok-wash:#E7F4EC;
   --shadow:0 1px 2px rgba(20,24,31,.06),0 10px 28px -14px rgba(20,24,31,.22);
 }
 @media (prefers-color-scheme:dark){
@@ -26,6 +27,7 @@
     --rise:#FF6F60; --rise-wash:#2A1714;
     --fall:#5CACF7; --fall-wash:#11202E;
     --amber:#DBA648; --amber-wash:#241E12;
+    --ok:#5CC98F; --ok-wash:#12261B;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
   }
 }
@@ -37,6 +39,7 @@
   --rise:#FF6F60; --rise-wash:#2A1714;
   --fall:#5CACF7; --fall-wash:#11202E;
   --amber:#DBA648; --amber-wash:#241E12;
+  --ok:#5CC98F; --ok-wash:#12261B;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
 }
 
@@ -294,6 +297,52 @@ input,select{font:inherit;color:inherit}
 .modal h3{margin-bottom:8px}
 .modal p{color:var(--ink-soft);font-size:.94rem;margin-bottom:18px}
 .modal .row{display:flex;gap:9px;justify-content:flex-end}
+.modal textarea{width:100%;font:inherit;font-size:.86rem;padding:.6em .7em;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper);color:var(--ink);margin:10px 0}
+.qprev{max-height:240px;overflow:auto;font-size:.84rem;border:1px solid var(--line);border-radius:6px;padding:8px 11px;margin-bottom:14px}
+.qprev p{margin:0 0 4px} .qprev .bad{color:var(--rise);font-weight:600}
+
+/* quiz — 교실 화면(프로젝터)용 */
+.qz{max-width:1100px;margin:0 auto;padding:26px 0 60px;display:flex;flex-direction:column;gap:18px}
+.qz-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qz-hd h2{font-family:"Gowun Batang",serif;font-size:1.8rem}
+.qz-lobby{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:start}
+@media (max-width:820px){.qz-lobby{grid-template-columns:1fr}}
+.qz-qr{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qz-qr .url{font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:#1E3A5F;word-break:break-all;max-width:240px;text-align:center}
+.qz-count{font-family:"IBM Plex Mono",monospace;font-size:2.8rem;font-weight:700;color:var(--navy);line-height:1.1}
+.qz-count small{font-size:1.1rem;color:var(--ink-faint);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;min-height:44px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--navy-wash);border:1px solid var(--navy-soft);border-radius:999px;padding:.3em .45em .3em .9em;font-weight:600;font-size:1.06rem}
+.chip.new{animation:pop .3s ease-out}
+.chip button{background:none;border:0;color:var(--ink-faint);font-size:1rem;line-height:1;padding:2px 5px}
+.chip button:hover{color:var(--rise)}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.qz-set{display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--ink-soft);font-size:.92rem}
+.qz-set input[type=number],.qz-set select{padding:.35em .5em;border:1px solid var(--line-strong);border-radius:6px;background:var(--paper)}
+.qz-set input[type=number]{width:66px}
+.qz-big{font-size:1.12rem;padding:.7em 1.7em}
+.qz-meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink-soft)}
+.qz-sec{font-size:2.2rem;color:var(--navy);line-height:1}
+.qz-sec.hurry{color:var(--rise)}
+.qbar{height:16px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--navy);transform-origin:left center}
+.qbar.hurry i{background:var(--rise)}
+.qz-q{font-size:2rem;font-weight:700;line-height:1.45;text-wrap:balance}
+.qz-opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.qz-opts{grid-template-columns:1fr}}
+.qz-opt{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;border:2px solid var(--line-strong);border-radius:12px;padding:16px 18px;font-size:1.32rem;font-weight:600;background:var(--raise)}
+.qz-opt.right{border-color:var(--ok);background:var(--ok-wash)}
+.qz-opt.dim{opacity:.4}
+.qz-opt .cnt{font-family:"IBM Plex Mono",monospace;font-size:1.1rem;color:var(--ink-soft)}
+.ob{display:inline-flex;align-items:center;justify-content:center;width:1.9em;height:1.9em;border-radius:8px;color:#fff;font-weight:700}
+.ob.o1{background:#D0342C} .ob.o2{background:#1462B8} .ob.o3{background:#B07800} .ob.o4{background:#1F7A4D} .ob.o5{background:#6B4FA0}
+.qz-lead{text-align:center;padding:70px 0;font-family:"Gowun Batang",serif;font-size:2.6rem;font-weight:700}
+.qz-lead .n{display:block;font-family:"IBM Plex Mono",monospace;font-size:6rem;color:var(--navy);line-height:1.2}
+.qrate{display:grid;grid-template-columns:2.2em 1fr 150px 64px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.qrate .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrate .bar{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.qrate .bar i{display:block;height:100%;background:var(--ok)}
+.qrate .v{font-family:"IBM Plex Mono",monospace;font-weight:600;text-align:right}
 
 @media (max-width:820px){
   .board{grid-template-columns:repeat(2,1fr)}
@@ -557,7 +606,10 @@ const cls = v => v>0? "rise" : v<0? "fall" : "flat";
 function render(){
   const app = document.getElementById("app");
   if(!S){ app.innerHTML = `<div class="empty" style="padding:80px">불러오는 중…</div>`; return; }
-  if(S.phase==="setup"){ app.innerHTML = viewSetup(); bindSetup(); return; }
+  if(S.phase==="setup"){
+    if(quizOpen && QZ){ app.innerHTML = viewQuiz(); bindQuiz(); return; }
+    app.innerHTML = viewSetup(); bindSetup(); return;
+  }
   app.innerHTML = topBar() + boardHTML() + `<div class="wrap">` + (
       S.phase==="meeting"  ? viewMeeting()  :
       S.phase==="debrief"  ? viewDebrief()  : viewPlay()
@@ -621,12 +673,18 @@ function viewSetup(){
       <span class="seed">${won(500000+st.score*5000)}원</span>
       <button class="del" data-a="del" title="삭제">×</button>
     </div>`).join("");
+  const qzLive = QZ && ["lobby","q","reveal"].includes(QZ.status);
+  const qzDone = S.students.filter(s=>s.name && s.quiz!==undefined);
+  const nItems = bankSize();
   return `<div class="wrap"><div class="setup">
     <h2>계좌 개설</h2>
-    <p class="lede">1차시 퀴즈 점수를 입력하면 시드머니가 자동으로 계산됩니다. 학생 7명 기준으로 준비되어 있습니다.</p>
+    <p class="lede">퀴즈를 열면 학생들이 휴대폰으로 풀고, 끝나면 이름과 점수가 여기에 자동으로 채워집니다. 직접 입력해도 됩니다.</p>
+    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점</p>`:""}
     ${rows || `<p class="empty">학생을 추가하세요.</p>`}
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
+      <button class="tbtn primary" data-a="quiz">${qzLive? "퀴즈 화면으로 돌아가기" : QZ && QZ.status==="done"? "퀴즈 결과 보기" : "퀴즈 열기"}</button>
+      <button class="tbtn" data-a="qbank">퀴즈 문제${nItems? ` (${nItems})` : " 넣기"}</button>
       <button class="tbtn" data-a="qr">학생 접속 QR 보기</button>
       <button class="tbtn" data-a="logout">로그아웃</button>
     </div>
@@ -969,6 +1027,8 @@ function bindSetup(){
     if(a==="qr") return showQR();
     if(a==="logout") return doLogout();
     syncSetupFromDOM();
+    if(a==="quiz") return openQuiz();
+    if(a==="qbank") return showBank();
     if(a==="add"){ S.students.push(freshStudent(uid(), "", 0)); commit(); }
     if(a==="del"){ S.students.splice(+b.closest(".srow").dataset.i,1); commit(); }
     if(a==="start"){
@@ -978,6 +1038,8 @@ function bindSetup(){
       S.students = named;
       // 지난 수업의 접속 기록·대기 주문·비공개 정보를 모두 지우고 새로 연다.
       PB("orders").remove(); PB("msg").remove(); PB("joined").remove(); PB("private").remove();
+      PB("quiz").remove(); detachQuiz(); quizOpen = false;
+      if(QZ){ QZ.applied = true; saveQuiz(); }
       joined = {};
       S.phase="play"; selected=S.students[0].id; commit();
       toast(`${named.length}명으로 개장했습니다.` + (blank? ` (이름이 빈 ${blank}칸 제외)` : ""));
@@ -1168,6 +1230,7 @@ function confirmReset(){
       if(x==="yes"){ const names = S.students.map(s=>({n:s.name,sc:s.score})), rev = S.rev||0;
         while(names.length<7) names.push({n:"",sc:0});
         S = freshState(); S.rev = rev; S.students = names.map(o=>freshStudent(uid(), o.n, o.sc));
+        detachQuiz(); quizOpen = false; QZ = null; FB("quiz").remove();
         selected=null; renewToken(); commit(); }
     });
 }
@@ -1180,6 +1243,402 @@ function renewToken(){
   watchShared();
   toast("학생 접속 QR이 새로 만들어졌습니다. 다시 보여주세요.");
 }
+
+/* ============================ 퀴즈 ============================ */
+// 문제와 정답은 교사 전용 경로(rooms/<ROOM>/quizBank)에만 둔다. 공개 저장소의 코드에는 정답이 없다.
+// 학생 휴대폰은 지금 문제(정답 제외)만 받고, 정답은 시간이 끝난 뒤에 받는다.
+// 진행 기록(rooms/<ROOM>/quiz)도 교사 전용이라 새로고침해도 이어서 진행할 수 있다.
+const LEAD = 3000;   // 문제가 뜨기 전 준비 시간(ms)
+const CIRCLED = ["①","②","③","④","⑤"];
+let BANK = null, QZ = null, quizOpen = false;
+let qPlayers = {}, qAnswers = {}, qSeen = new Set(), qWatch = null, qAnsRef = null;
+let qTimer = null, qRaf = 0, qIv = 0, qShown = "", qClosing = false, offset = 0;
+const serverNow = () => Date.now() + offset;
+DB.ref(".info/serverTimeOffset").on("value", s=>{ offset = s.val() || 0; });
+const normName = s => String(s||"").replace(/\s+/g,"").toLowerCase();
+const bankSize = () => (BANK && BANK.items ? BANK.items.length : 0);
+
+// 퀴즈 파일 형식: 문제마다 "질문 / ①~④ 보기 / 정답: ④". "1번" 같은 번호 줄은 있어도 없어도 된다.
+function parseQuiz(text){
+  const items = [], errs = [];
+  let q = [], opts = [];
+  for(const raw of String(text||"").replace(/^﻿/,"").split(/\r?\n/)){
+    const line = raw.trim();
+    if(!line || /^(문제\s*)?\d+\s*(번|\.|\))?$/.test(line)) continue;
+    const an = line.match(/^정답\s*[:：]?\s*([①②③④⑤]|[1-5])/);
+    if(an){
+      const no = items.length + errs.length + 1;
+      const ans = CIRCLED.includes(an[1]) ? CIRCLED.indexOf(an[1])+1 : +an[1];
+      const list = Array.from(opts);
+      if(!q.length) errs.push(`${no}번: 질문이 없습니다.`);
+      else if(list.length<2 || list.some(o=>!o)) errs.push(`${no}번: 보기를 읽지 못했습니다.`);
+      else if(ans>list.length) errs.push(`${no}번: 정답 번호가 보기 수보다 큽니다.`);
+      else items.push({q:q.join(" ").replace(/^\d+\s*(번|\.)\s*/,""), opts:list, ans});
+      q = []; opts = []; continue;
+    }
+    const op = line.match(/^([①②③④⑤]|\(?[1-5]\))\s*(.*)$/);
+    if(op){ opts[CIRCLED.includes(op[1]) ? CIRCLED.indexOf(op[1]) : +op[1].replace(/\D/g,"")-1] = op[2].trim(); continue; }
+    if(opts.length) opts[opts.length-1] += " " + line; else q.push(line);
+  }
+  if(q.length || opts.length) errs.push(`${items.length+errs.length+1}번: '정답: ②' 줄이 없습니다.`);
+  return {items, errs};
+}
+const bankText = items => items.map((it,i)=>`${i+1}번\n\n${it.q}\n\n${it.opts.map((o,k)=>`${CIRCLED[k]} ${o}`).join("\n")}\n\n정답: ${CIRCLED[it.ans-1]}`).join("\n\n");
+function readText(file, cb){
+  const rd = enc => { const r = new FileReader(); r.onload = ()=>{
+    // 메모장의 옛 한글 인코딩이면 글자가 깨진다. 그때는 EUC-KR로 다시 읽는다.
+    if(enc==="utf-8" && String(r.result).includes("�")) return rd("euc-kr");
+    cb(String(r.result)); }; r.readAsText(file, enc); };
+  rd("utf-8");
+}
+
+function showBank(){
+  if(QZ && ["q","reveal"].includes(QZ.status)) return toast("퀴즈를 진행하는 중에는 문제를 바꿀 수 없습니다.");
+  const o = document.getElementById("overlay");
+  o.innerHTML = `<div class="modal"><div class="box" style="max-width:680px">
+    <h3>퀴즈 문제</h3>
+    <p>저장된 문제: <strong>${bankSize()? bankSize()+"문제" : "없음"}</strong> · 퀴즈 파일(.txt)을 불러오거나 내용을 붙여넣으세요.<br>
+      <span style="font-size:.84rem;color:var(--rise);font-weight:600">정답이 보이는 창입니다. 학생에게 화면을 보여주지 마세요.</span></p>
+    <input type="file" id="qfile" accept=".txt,text/plain">
+    <textarea id="qtext" rows="9" placeholder="1번&#10;&#10;경제활동에 해당하지 않는 것은?&#10;&#10;① ...&#10;② ...&#10;③ ...&#10;④ ...&#10;&#10;정답: ④"></textarea>
+    <div class="qprev" id="qprev"><p style="color:var(--ink-faint)">불러온 문제가 여기에 보입니다.</p></div>
+    <div class="row"><button class="tbtn" data-x="close">닫기</button>
+      <button class="tbtn primary" data-x="save" disabled>저장</button></div>
+  </div></div>`;
+  const ta = o.querySelector("#qtext"), pv = o.querySelector("#qprev"), sv = o.querySelector('[data-x="save"]');
+  let parsed = null;
+  const update = ()=>{
+    parsed = parseQuiz(ta.value);
+    sv.disabled = !(parsed.items.length && !parsed.errs.length);
+    pv.innerHTML = parsed.errs.map(e=>`<p class="bad">${esc(e)}</p>`).join("") +
+      parsed.items.map((it,i)=>`<p>${i+1}. ${esc(it.q)} <strong style="color:var(--ok)">정답 ${CIRCLED[it.ans-1]} ${esc(it.opts[it.ans-1])}</strong></p>`).join("") +
+      (parsed.items.length || parsed.errs.length ? "" : `<p style="color:var(--ink-faint)">문제를 찾지 못했습니다.</p>`);
+  };
+  ta.oninput = update;
+  o.querySelector("#qfile").onchange = e=>{ const f = e.target.files[0]; if(f) readText(f, t=>{ ta.value = t; update(); }); };
+  if(bankSize()){ ta.value = bankText(BANK.items); update(); }
+  o.onclick = e=>{
+    const b = e.target.closest("[data-x]"); if(!b) return;
+    if(b.dataset.x==="close"){ o.innerHTML = ""; return; }
+    if(b.dataset.x==="save" && parsed && parsed.items.length && !parsed.errs.length){
+      sv.disabled = true;
+      const next = {items:parsed.items, ts:Date.now()};
+      FB("quizBank").set(next).then(()=>{
+        BANK = next; o.innerHTML = ""; toast(`${next.items.length}문제를 저장했습니다.`); render();
+      }).catch(e=>{ sv.disabled = false; toast("저장하지 못했습니다. 인터넷을 확인하세요."); });
+    }
+  };
+}
+
+function normQuiz(z){
+  const n = (z.items||[]).length;
+  z.marks = Array.from({length:n}, (_,i)=> (z.marks && z.marks[i]) || {});
+  z.perQ  = Array.from({length:n}, (_,i)=> (z.perQ && z.perQ[i]) || null);
+  z.players = z.players || {};
+  return z;
+}
+function saveQuiz(){
+  if(!QZ) return;
+  return FB("quiz").set(JSON.parse(JSON.stringify(QZ))).catch(e=>toast("퀴즈 기록 저장 실패 — 인터넷을 확인하세요."));
+}
+function quizTotals(){
+  const t = {};
+  (QZ.marks||[]).forEach(m=> Object.entries(m||{}).forEach(([sid,v])=>{ t[sid] = (t[sid]||0) + v; }));
+  return t;
+}
+const playerList = () => Object.entries(qPlayers).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+// 중간에 끝내면 실제로 낸 문제 수로 점수를 매긴다.
+const askedCount = () => QZ.perQ.filter(Boolean).length || QZ.items.length;
+// 퀴즈 전에 직접 적어 둔 명단. 개장 전 설정은 새로고침하면 사라지므로 퀴즈 기록에 같이 둔다.
+const setupBase = () => S.students.filter(s=>s.name).map(s=>({id:s.id, name:s.name, score:s.score}));
+
+function openQuiz(){
+  if(!bankSize()) return showBank();
+  if(!QZ) return newQuiz();
+  if(QZ.status!=="done"){ QZ.base = setupBase(); saveQuiz(); }
+  quizOpen = true; attachQuiz(); render();
+}
+async function newQuiz(){
+  const expect = (QZ && QZ.expect) || 11, dur = (QZ && QZ.dur) || 20, auto = QZ ? QZ.auto!==false : true;
+  detachQuiz();
+  QZ = normQuiz({id:uid(), status:"lobby", idx:-1, expect, dur, auto, items:BANK.items, applied:false, base:setupBase()});
+  qPlayers = {}; qSeen = new Set();
+  try{
+    await PB("quiz").remove();
+    await PB("quiz/live").set({id:QZ.id, status:"lobby", n:QZ.items.length, expect});
+  }catch(e){ toast("퀴즈를 열지 못했습니다. 인터넷을 확인하세요."); }
+  saveQuiz();
+  quizOpen = true; attachQuiz(); render();
+}
+function attachQuiz(){
+  if(qWatch) return;
+  qWatch = PB("quiz/players");
+  qWatch.on("value", s=>{
+    qPlayers = s.val() || {};
+    if(!QZ || !quizOpen) return;
+    if(QZ.status==="lobby"){ paintLobby(); maybeAutoStart(); }
+    else if(QZ.status==="q") paintAnswered();
+  });
+  if(QZ && QZ.status==="q") resumeQuestion();
+}
+function detachQuiz(){
+  if(qWatch){ qWatch.off(); qWatch = null; }
+  if(qAnsRef){ qAnsRef.off(); qAnsRef = null; }
+  clearTimeout(qTimer); cancelAnimationFrame(qRaf); clearInterval(qIv);
+}
+function maybeAutoStart(){
+  if(QZ.status==="lobby" && QZ.auto!==false && Object.keys(qPlayers).length >= QZ.expect) startQuiz();
+}
+function startQuiz(){
+  if(!QZ || QZ.status!=="lobby" || !Object.keys(qPlayers).length) return;
+  showQuestion(0);
+}
+function showQuestion(i){
+  const it = QZ.items[i];
+  const startsAt = serverNow() + LEAD, endsAt = startsAt + QZ.dur*1000;
+  Object.assign(QZ, {status:"q", idx:i, startsAt, endsAt});
+  qAnswers = {};
+  PB("quiz/live").set({id:QZ.id, status:"q", n:QZ.items.length, expect:QZ.expect, idx:i, qk:"q"+i,
+                       q:{text:it.q, opts:it.opts}, startsAt, endsAt, dur:QZ.dur})
+    .catch(e=>toast("문제를 보내지 못했습니다. 인터넷을 확인하세요."));
+  saveQuiz();
+  resumeQuestion();
+  render();
+}
+function resumeQuestion(){
+  if(qAnsRef) qAnsRef.off();
+  qAnsRef = PB(`quiz/answers/q${QZ.idx}`);
+  qAnsRef.on("value", s=>{
+    qAnswers = s.val() || {};
+    paintAnswered();
+    // 들어온 학생이 모두 답하면 시간이 남아도 바로 마감한다.
+    const n = Object.keys(qPlayers).length;
+    if(QZ.status==="q" && n && Object.keys(qAnswers).filter(k=>qPlayers[k]).length >= n) closeQuestion();
+  });
+  clearTimeout(qTimer);
+  // 휴대폰에서 막 누른 답이 도착할 틈을 조금 준다. 늦은 답은 서버 규칙이 막는다.
+  qTimer = setTimeout(closeQuestion, Math.max(0, QZ.endsAt - serverNow() + 800));
+}
+async function closeQuestion(){
+  if(!QZ || QZ.status!=="q" || qClosing) return;
+  qClosing = true; clearTimeout(qTimer);
+  try{
+    QZ.status = "reveal";
+    // 상태를 먼저 바꾼다. 이 순간부터 들어오는 답은 규칙이 거절하므로, 아래에서 읽는 답이 최종이다.
+    await PB("quiz/live/status").set("reveal");
+    const got = (await PB(`quiz/answers/q${QZ.idx}`).get()).val() || {};
+    const it = QZ.items[QZ.idx], dist = it.opts.map(()=>0), mark = {};
+    Object.entries(got).forEach(([sid,k])=>{
+      if(dist[k-1]!==undefined) dist[k-1]++;
+      mark[sid] = k===it.ans ? 1 : 0;
+    });
+    QZ.marks[QZ.idx] = mark;   // 같은 문제를 다시 채점해도 결과가 같다(새로고침 대비)
+    QZ.perQ[QZ.idx] = {right:Object.values(mark).filter(Boolean).length, answered:Object.keys(got).length, dist};
+    QZ.players = snapPlayers();
+    await PB("quiz/live").update({ans:it.ans, dist});
+    const tot = quizTotals();
+    Object.keys(QZ.players).forEach(sid=>
+      PB(`private/${sid}/quiz`).set({correct:tot[sid]||0, done:QZ.idx+1, n:QZ.items.length}));
+    saveQuiz();
+  }catch(e){ toast("채점 중 오류가 났습니다. 인터넷을 확인하세요."); }
+  qClosing = false;
+  if(qAnsRef){ qAnsRef.off(); qAnsRef = null; }
+  render();
+}
+function snapPlayers(){
+  const out = {...(QZ.players||{})};
+  Object.entries(qPlayers).forEach(([sid,p])=>{ out[sid] = {name:p.name, ts:p.ts||0}; });
+  return out;
+}
+function nextQuestion(){
+  if(!QZ || QZ.status!=="reveal") return;
+  if(QZ.idx+1 < QZ.items.length) showQuestion(QZ.idx+1); else finishQuiz();
+}
+function finishQuiz(){
+  clearTimeout(qTimer);
+  QZ.status = "done"; QZ.players = snapPlayers();
+  PB("quiz/live").set({id:QZ.id, status:"done", n:askedCount()}).catch(e=>{});
+  const k = applyQuizToSetup();
+  saveQuiz(); render();
+  if(k) toast(`${k}명의 이름과 점수를 계좌 개설에 넣었습니다.`);
+}
+function endQuizEarly(){
+  overlay(`<h3>퀴즈 끝내기</h3><p>지금까지 푼 문제로 점수를 매기고 끝냅니다.</p>
+    <div class="row"><button class="tbtn" data-x="no">계속하기</button><button class="tbtn danger" data-x="yes">끝내기</button></div>`,
+    async x=>{ if(x!=="yes") return; if(QZ.status==="q") await closeQuestion(); finishQuiz(); });
+}
+function confirmNewQuiz(){
+  overlay(`<h3>새 퀴즈 열기</h3><p>지난 퀴즈의 입장 명단과 답이 지워집니다. 계좌 개설에 이미 들어간 점수는 그대로입니다.</p>
+    <div class="row"><button class="tbtn" data-x="no">취소</button><button class="tbtn primary" data-x="yes">새로 열기</button></div>`,
+    x=>{ if(x==="yes") newQuiz(); });
+}
+
+// 퀴즈 결과를 계좌 개설 명단에 넣는다. 같은 이름이 있으면 그 줄을, 없으면 빈 줄이나 새 줄을 쓴다.
+// 학생 번호(id)를 퀴즈 때 받은 번호로 맞춰 두면, 개장했을 때 같은 휴대폰이 바로 자기 계좌로 들어간다.
+function applyQuizToSetup(){
+  if(!QZ || S.phase!=="setup") return 0;
+  const tot = quizTotals(), n = askedCount(), used = new Set();
+  const list = Object.entries(QZ.players||{}).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+  list.forEach(([sid,p])=>{
+    const c = tot[sid]||0, score = Math.round(c*100/n);
+    let st = S.students.find(s=>!used.has(s) && s.name && normName(s.name)===normName(p.name))
+          || S.students.find(s=>!used.has(s) && !s.name);
+    if(!st){ st = freshStudent(sid, "", 0); S.students.push(st); }
+    used.add(st);
+    Object.assign(st, {id:sid, name:st.name || p.name, score, seed:500000+score*5000, quiz:c, quizN:n});
+    st.cash = st.seed;
+  });
+  return list.length;
+}
+
+function chipsHTML(){
+  const list = playerList();
+  if(!list.length) return `<span style="color:var(--ink-faint)">아직 아무도 들어오지 않았습니다.</span>`;
+  const html = list.map(([sid,p])=>`<span class="chip ${qSeen.has(sid)?"":"new"}">${esc(p.name)}<button data-a="qkick" data-id="${sid}" title="내보내기">×</button></span>`).join("");
+  list.forEach(([sid])=>qSeen.add(sid));
+  return html;
+}
+function paintLobby(){
+  const c = document.getElementById("qzcnt"); if(!c) return;
+  const cnt = Object.keys(qPlayers).length;
+  c.innerHTML = `${cnt}<small> / ${QZ.expect}명 입장</small>`;
+  document.getElementById("qzchips").innerHTML = chipsHTML();
+  document.getElementById("qzgo").disabled = !cnt;
+}
+function paintAnswered(){
+  const el = document.getElementById("qzans"); if(!el) return;
+  el.textContent = `응답 ${Object.keys(qAnswers).filter(k=>qPlayers[k]).length} / ${Object.keys(qPlayers).length}`;
+}
+const optsHTML = (it, dist) => it.opts.map((o,k)=>`
+  <div class="qz-opt ${dist? (k+1===it.ans?"right":"dim") : ""}">
+    <span class="ob o${k+1}">${CIRCLED[k]}</span><span>${esc(o)}</span>
+    ${dist? `<span class="cnt">${dist[k]||0}명</span>`:""}</div>`).join("");
+
+function viewQuiz(){
+  const n = QZ.items.length, it = QZ.items[QZ.idx];
+  qShown = "";
+  if(QZ.status==="lobby"){
+    const cnt = Object.keys(qPlayers).length;
+    return `<div class="wrap"><div class="qz">
+      <div class="qz-hd"><h2>경제 퀴즈 · 대기실</h2><div class="spacer"></div>
+        <button class="tbtn" data-a="qback">계좌 개설로</button></div>
+      <div class="qz-lobby">
+        <div class="qz-qr"><div id="qzqr"></div><div class="url">${esc(studentURL())}</div></div>
+        <div>
+          <p style="font-size:1.12rem;color:var(--ink-soft);margin-bottom:8px">휴대폰으로 QR을 찍고 <strong>자기 이름</strong>을 입력하세요.</p>
+          <div class="qz-count" id="qzcnt">${cnt}<small> / ${QZ.expect}명 입장</small></div>
+          <div class="chips" id="qzchips">${chipsHTML()}</div>
+          <div class="qz-set" style="margin-top:22px">
+            <label>참여 인원 <input type="number" id="qzexp" min="1" max="60" value="${QZ.expect}"></label>
+            <label>문제당 <select id="qzdur">${[10,15,20,30,45,60].map(v=>`<option value="${v}" ${v===QZ.dur?"selected":""}>${v}초</option>`).join("")}</select></label>
+            <label><input type="checkbox" id="qzauto" ${QZ.auto!==false?"checked":""}> 다 모이면 자동 시작</label>
+            <span>${n}문제</span>
+          </div>
+          <button class="tbtn primary qz-big" id="qzgo" data-a="qstart" style="margin-top:18px" ${cnt?"":"disabled"}>지금 시작</button>
+        </div>
+      </div></div></div>`;
+  }
+  if(QZ.status==="q"){
+    const now = serverNow();
+    if(now < QZ.startsAt){
+      qShown = "lead";
+      return `<div class="wrap"><div class="qz"><div class="qz-lead">문제 ${QZ.idx+1} / ${n}
+        <span class="n" id="qzlead">${Math.ceil((QZ.startsAt-now)/1000)}</span></div></div></div>`;
+    }
+    const left = Math.max(0, QZ.endsAt-now);
+    qShown = left>0 ? "q" : "qover";
+    return `<div class="wrap"><div class="qz">
+      <div class="qz-hd"><span class="roundchip">문제 ${QZ.idx+1} / ${n}</span><div class="spacer"></div>
+        <span class="phasechip" id="qzans"></span>
+        <button class="tbtn" data-a="qclose">바로 마감</button>
+        <button class="tbtn" data-a="qend">끝내기</button></div>
+      <div class="qz-meta"><span>남은 시간</span><span class="qz-sec" id="qzsec">${Math.ceil(left/1000)}</span></div>
+      <div class="qbar" id="qzbar"><i style="transform:scaleX(${left/(QZ.dur*1000)})"></i></div>
+      <div class="qz-q">${esc(it.q)}</div>
+      <div class="qz-opts">${optsHTML(it)}</div></div></div>`;
+  }
+  if(QZ.status==="reveal"){
+    const pq = QZ.perQ[QZ.idx] || {right:0, answered:0, dist:it.opts.map(()=>0)};
+    const last = QZ.idx+1 >= n;
+    return `<div class="wrap"><div class="qz">
+      <div class="qz-hd"><span class="roundchip">문제 ${QZ.idx+1} / ${n}</span>
+        <span class="phasechip" style="color:var(--ok);border-color:var(--ok)">정답 ${CIRCLED[it.ans-1]} · ${pq.right}명 맞힘</span>
+        <div class="spacer"></div>
+        <button class="tbtn" data-a="qend">끝내기</button>
+        <button class="tbtn primary qz-big" data-a="qnext">${last? "결과 보기 →" : "다음 문제 →"}</button></div>
+      <div class="qz-q">${esc(it.q)}</div>
+      <div class="qz-opts">${optsHTML(it, pq.dist||it.opts.map(()=>0))}</div></div></div>`;
+  }
+  // done
+  const tot = quizTotals(), ps = Object.keys(QZ.players||{}), asked = askedCount();
+  const avg = ps.length ? ps.reduce((a,sid)=>a+(tot[sid]||0),0)/ps.length : 0;
+  const rates = QZ.items.map((q,i)=>{
+    const pq = QZ.perQ[i], r = pq && ps.length ? pq.right/ps.length : 0;
+    return `<div class="qrate"><span class="n" style="color:var(--ink-faint)">${i+1}</span><span class="tx">${esc(q.q)}</span>
+      <span class="bar"><i style="width:${Math.round(r*100)}%"></i></span><span class="v">${pq? Math.round(r*100)+"%" : "—"}</span></div>`;
+  }).join("");
+  return `<div class="wrap"><div class="qz">
+    <div class="qz-hd"><h2>퀴즈 끝!</h2><div class="spacer"></div>
+      <button class="tbtn" data-a="qnew">새 퀴즈 열기</button>
+      <button class="tbtn primary qz-big" data-a="qback">계좌 개설로 →</button></div>
+    <div class="card"><div class="bd">
+      <p style="font-size:1.4rem;font-weight:700">${ps.length}명 참여 · 평균 ${avg.toFixed(1)}개 정답 <span style="color:var(--ink-faint);font-weight:500">(${asked}문제)</span></p>
+      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 정답 1개 = ${Math.round(100/asked)}점, 시드머니 +${won(Math.round(100/asked)*5000)}원.</p>
+    </div></div>
+    <div class="card"><header><h3>문제별 정답률</h3></header><div class="bd">${rates}</div></div>
+  </div></div>`;
+}
+
+function bindQuiz(){
+  const app = document.getElementById("app");
+  if(QZ.status==="lobby"){
+    try{ new QRCode(document.getElementById("qzqr"), {text:studentURL(), width:220, height:220}); }catch(e){}
+    const ex = document.getElementById("qzexp"), du = document.getElementById("qzdur"), au = document.getElementById("qzauto");
+    ex.onchange = ()=>{ QZ.expect = Math.max(1, Math.min(60, Math.floor(+ex.value)||1)); ex.value = QZ.expect;
+      PB("quiz/live/expect").set(QZ.expect); saveQuiz(); paintLobby(); maybeAutoStart(); };
+    du.onchange = ()=>{ QZ.dur = +du.value; saveQuiz(); };
+    au.onchange = ()=>{ QZ.auto = au.checked; saveQuiz(); maybeAutoStart(); };
+  }
+  if(QZ.status==="q"){ paintAnswered(); quizLoop(); }
+  app.onclick = e=>{
+    const b = e.target.closest("[data-a]"); if(!b) return;
+    const a = b.dataset.a;
+    if(a==="qback"){ quizOpen = false; render(); return; }
+    if(a==="qstart") return startQuiz();
+    if(a==="qkick") return PB(`quiz/players/${b.dataset.id}`).remove();
+    if(a==="qclose") return closeQuestion();
+    if(a==="qnext") return nextQuestion();
+    if(a==="qend") return endQuizEarly();
+    if(a==="qnew") return confirmNewQuiz();
+  };
+}
+// 시간 바와 남은 초는 화면을 다시 그리지 않고 매 프레임 서버 시각으로 계산해 고친다.
+function quizTick(){   // 계속 돌아야 하면 true
+  if(!quizOpen || !QZ || QZ.status!=="q") return false;
+  const now = serverNow();
+  const want = now < QZ.startsAt ? "lead" : now <= QZ.endsAt ? "q" : "qover";
+  if(want !== qShown){ render(); return false; }   // render()가 루프를 새로 시작한다
+  if(want==="lead"){ const el = document.getElementById("qzlead"); if(el) el.textContent = Math.ceil((QZ.startsAt-now)/1000); }
+  else if(want==="q"){
+    const left = QZ.endsAt-now, hurry = left < 5000;
+    const bar = document.getElementById("qzbar"), sec = document.getElementById("qzsec");
+    if(bar){ bar.firstElementChild.style.transform = `scaleX(${left/(QZ.dur*1000)})`; bar.classList.toggle("hurry", hurry); }
+    if(sec){ sec.textContent = Math.ceil(left/1000); sec.classList.toggle("hurry", hurry); }
+  }
+  else return false;   // 시간 끝. 마감 처리는 타이머가 한다.
+  return true;
+}
+function quizLoop(){
+  cancelAnimationFrame(qRaf); clearInterval(qIv);
+  const frame = ()=>{ if(quizTick()) qRaf = requestAnimationFrame(frame); };
+  qRaf = requestAnimationFrame(frame);
+  // 창이 가려지면 requestAnimationFrame이 멈춘다. 문제 전환은 타이머로도 챙긴다.
+  const iv = setInterval(()=>{ if(!quizTick()) clearInterval(iv); }, 250); qIv = iv;
+}
+// 발표용 리모컨(→, PageDown)으로 다음 문제로 넘긴다.
+document.addEventListener("keydown", e=>{
+  if(quizOpen && QZ && QZ.status==="reveal" && (e.key==="ArrowRight" || e.key==="PageDown")){ e.preventDefault(); nextQuestion(); }
+});
 
 /* ============================ 유틸 ============================ */
 // Firebase는 빈 배열·빈 객체를 저장하지 않고 키를 지운다.
@@ -1344,7 +1803,11 @@ async function boot(){
     await initStore();
     TOKEN = await ensureToken();
     saved = await store.load();
+    BANK = (await FB("quizBank").get()).val();
+    QZ = (await FB("quiz").get()).val();
   }catch(e){ return showFatal(e); }
+  if(QZ && !(QZ.items||[]).length) QZ = null;
+  if(QZ) normQuiz(QZ);
   // 개장 전 상태는 복원하지 않는다. 반쯤 채워진 설정 화면을 되살릴 이유가 없고,
   // 남아 있던 낡은 명단이 새 입력을 밀어내는 사고만 만든다.
   if(saved && saved.v===1 && saved.students && saved.phase!=="setup"){
@@ -1354,6 +1817,15 @@ async function boot(){
     S = freshState();
     if(saved && saved.rev) S.rev = saved.rev;
     S.students = Array.from({length:7}, ()=>freshStudent(uid(), "", 0));
+  }
+  // 퀴즈를 하던 중이었으면 그 화면으로 돌아가고, 끝났는데 아직 개장 전이면 결과를 명단에 다시 넣는다.
+  if(S.phase==="setup" && QZ){
+    if(!QZ.applied && QZ.base && QZ.base.length){
+      S.students = QZ.base.map(b=>freshStudent(b.id, b.name, b.score||0));
+      while(S.students.length < 7) S.students.push(freshStudent(uid(), "", 0));
+    }
+    if(QZ.status==="done" && !QZ.applied) applyQuizToSetup();
+    if(["lobby","q","reveal"].includes(QZ.status)){ quizOpen = true; attachQuiz(); }
   }
   render();
   publishPub();
