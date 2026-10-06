@@ -375,7 +375,7 @@ function viewQuiz(){
   const c= QRES ? QRES.correct : null, sc= c===null||!asked ? null : Math.round(c*100/asked);
   return `<div class="wrap"><div class="qz">
     <div class="qres ok"><b>퀴즈 끝!</b>${c===null? "결과를 정리하는 중이에요." : `${asked}문제 중 ${c}개 정답`}</div>
-    ${sc!==null? `<p class="lede">시드머니 <strong class="n">${won(500000+sc*5000)}원</strong>으로 모의투자를 시작해요.</p>`:""}
+    ${sc!==null? `<p class="lede">시드머니 <strong class="n">${won(sc*10000)}원</strong>으로 모의투자를 시작해요.</p>`:""}
     <p class="secret">선생님이 모의투자를 열면 이 화면이 바로 바뀌어요.</p>
   </div></div>`;
 }
@@ -479,7 +479,7 @@ function claim(id){
 function viewMain(){
   const m=me(), p=ST.prices||{}, pv=ST.prev||p;
   const held=SK.reduce((a,k)=>a+(m.hold?.[k]||0)*(p[k]||0),0);
-  const tot=(m.cash||0)+held, ret=((tot-m.seed)/m.seed)*100;
+  const tot=(m.cash||0)+held, ret= m.seed ? ((tot-m.seed)/m.seed)*100 : 0;
   const open=!ST.revealed && ST.phase==="play";
 
   const rows=STOCKS.map(s=>{

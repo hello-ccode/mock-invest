@@ -453,8 +453,10 @@ const VAGUE = ["그냥","느낌","감으로","감이","몰라","모르","아무"
 /* ============================ 상태 ============================ */
 let S = null, store = null, selected = null, openStock = null, toastT = null, snapshot = null, peek = false, joined = {};
 
+// 시드머니 = 퀴즈 점수(0~100) × 10,000원. 10문제면 정답 1개에 10만 원, 다 맞히면 100만 원.
+const SEED = score => Math.round(score*10000);
 function freshStudent(id, name, score){
-  const seed = 500000 + score*5000;
+  const seed = SEED(score);
   return { id, name, score, seed, cash:seed, hold:Object.fromEntries(SK.map(k=>[k,0])),
            trades:[], news:[], fees:0, spoke:false };
 }
@@ -597,7 +599,7 @@ function commit(){ persist(); render(); }
 const won = n => Math.round(n).toLocaleString("ko-KR");
 const stockVal = (st,pr) => SK.reduce((a,k)=>a+st.hold[k]*pr[k], 0);
 const total = (st,pr) => st.cash + stockVal(st,pr);
-const retPct = (st,pr) => (total(st,pr) - st.seed) / st.seed * 100;
+const retPct = (st,pr) => st.seed ? (total(st,pr) - st.seed) / st.seed * 100 : 0;   // 시드 0원이면 수익률 0%
 const curRound = () => ROUNDS[S.round-1];
 const sgn = v => v>0? "+" : "";
 const cls = v => v>0? "rise" : v<0? "fall" : "flat";
@@ -670,7 +672,7 @@ function viewSetup(){
       <span class="idx">${i+1}</span>
       <input class="f-nm" value="${esc(st.name)}" placeholder="학생 이름" maxlength="12">
       <input class="f-sc" type="number" min="0" max="100" step="10" value="${st.score}" placeholder="점수">
-      <span class="seed">${won(500000+st.score*5000)}원</span>
+      <span class="seed">${won(SEED(st.score))}원</span>
       <button class="del" data-a="del" title="삭제">×</button>
     </div>`).join("");
   const qzLive = QZ && ["lobby","q","reveal"].includes(QZ.status);
@@ -679,7 +681,7 @@ function viewSetup(){
   return `<div class="wrap"><div class="setup">
     <h2>계좌 개설</h2>
     <p class="lede">퀴즈를 열면 학생들이 휴대폰으로 풀고, 끝나면 이름과 점수가 여기에 자동으로 채워집니다. 직접 입력해도 됩니다.</p>
-    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점</p>`:""}
+    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점 = 시드머니 ${won(SEED(Math.round(100/(qzDone[0].quizN||10))))}원</p>`:""}
     ${rows || `<p class="empty">학생을 추가하세요.</p>`}
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
@@ -689,8 +691,9 @@ function viewSetup(){
       <button class="tbtn" data-a="logout">로그아웃</button>
     </div>
     <div class="formula">
-      <strong>시드머니 = 500,000원 + (퀴즈 점수 × 5,000원)</strong><br>
-      0점이어도 50만 원은 보장됩니다. 순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
+      <strong>시드머니 = 퀴즈 점수 × 10,000원</strong> · 10문제면 정답 1개에 10만 원, 다 맞히면 100만 원<br>
+      순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
+      0점이면 시드머니가 0원이라 거래할 수 없으니, 그럴 때는 점수를 직접 고쳐 주세요.
     </div>
     <div class="formula" style="background:var(--navy-wash);border-color:var(--navy-soft)">
       수수료 0.5% · 정보는 라운드당 1인 1건 · 주주총회는 4라운드 종료 후 · 기준금리 충격은 5라운드
@@ -1019,7 +1022,7 @@ function bindSetup(){
   app.querySelectorAll(".f-nm").forEach(el=>el.oninput = ()=> setupCount());
   app.querySelectorAll(".f-sc").forEach(el=>el.oninput = e=>{
     const v = Math.max(0, Math.min(100, +e.target.value||0));
-    e.target.closest(".srow").querySelector(".seed").textContent = won(500000+v*5000)+"원";
+    e.target.closest(".srow").querySelector(".seed").textContent = won(SEED(v))+"원";
   });
   app.onclick = e=>{
     const b = e.target.closest("[data-a]"); if(!b) return;
@@ -1056,7 +1059,7 @@ function syncSetupFromDOM(){
     const st = S.students[+row.dataset.i];
     const name = (row.querySelector(".f-nm")?.value ?? "").trim();
     const v = Math.max(0, Math.min(100, +(row.querySelector(".f-sc")?.value) || 0));
-    if(st){ st.name = name; st.score = v; st.seed = 500000+v*5000; st.cash = st.seed; return st; }
+    if(st){ st.name = name; st.score = v; st.seed = SEED(v); st.cash = st.seed; return st; }
     return freshStudent(uid(), name, v);
   });
 }
@@ -1259,23 +1262,44 @@ const normName = s => String(s||"").replace(/\s+/g,"").toLowerCase();
 const bankSize = () => (BANK && BANK.items ? BANK.items.length : 0);
 
 // 퀴즈 파일 형식: 문제마다 "질문 / ①~④ 보기 / 정답: ④". "1번" 같은 번호 줄은 있어도 없어도 된다.
+// 그 문제만 시간을 다르게 하려면 번호 줄을 "9번 (30초)"로 쓰거나, 문제 안에 "시간: 30초" 줄을 넣는다.
+const SEC_MIN = 5, SEC_MAX = 300;
 function parseQuiz(text){
   const items = [], errs = [];
-  let q = [], opts = [];
-  for(const raw of String(text||"").replace(/^﻿/,"").split(/\r?\n/)){
-    const line = raw.trim();
-    if(!line || /^(문제\s*)?\d+\s*(번|\.|\))?$/.test(line)) continue;
+  let q = [], opts = [], sec = 0, afterAns = false;
+  for(const raw of String(text||"").split(/\r?\n/)){
+    const line = raw.trim();   // trim()은 파일 맨 앞의 BOM 표시도 지운다
+    if(!line) continue;
+    const hd = line.match(/^(?:문제\s*)?\d+\s*(?:번|\.|\))\s*\(?\s*(\d+)\s*초\s*\)?$/);
+    if(hd || /^(문제\s*)?\d+\s*(번|\.|\))?$/.test(line)){ if(hd) sec = +hd[1]; afterAns = false; continue; }
+    const tm = line.match(/^(?:제한\s*)?시간\s*[:：]?\s*(\d+)\s*초?$/);
+    if(tm){
+      // 정답 줄 바로 뒤에 오면 방금 끝난 문제의 시간이다.
+      if(afterAns){
+        const v = +tm[1];
+        if(v<SEC_MIN || v>SEC_MAX) errs.push(`${items.length}번: 시간은 ${SEC_MIN}~${SEC_MAX}초 사이로 적어 주세요.`);
+        else items[items.length-1].sec = v;
+      }else sec = +tm[1];
+      continue;
+    }
     const an = line.match(/^정답\s*[:：]?\s*([①②③④⑤]|[1-5])/);
     if(an){
       const no = items.length + errs.length + 1;
       const ans = CIRCLED.includes(an[1]) ? CIRCLED.indexOf(an[1])+1 : +an[1];
       const list = Array.from(opts);
+      afterAns = false;
       if(!q.length) errs.push(`${no}번: 질문이 없습니다.`);
       else if(list.length<2 || list.some(o=>!o)) errs.push(`${no}번: 보기를 읽지 못했습니다.`);
       else if(ans>list.length) errs.push(`${no}번: 정답 번호가 보기 수보다 큽니다.`);
-      else items.push({q:q.join(" ").replace(/^\d+\s*(번|\.)\s*/,""), opts:list, ans});
-      q = []; opts = []; continue;
+      else if(sec && (sec<SEC_MIN || sec>SEC_MAX)) errs.push(`${no}번: 시간은 ${SEC_MIN}~${SEC_MAX}초 사이로 적어 주세요.`);
+      else{
+        const it = {q:q.join(" ").replace(/^\d+\s*(번|\.)\s*/,""), opts:list, ans};
+        if(sec) it.sec = sec;
+        items.push(it); afterAns = true;
+      }
+      q = []; opts = []; sec = 0; continue;
     }
+    afterAns = false;
     const op = line.match(/^([①②③④⑤]|\(?[1-5]\))\s*(.*)$/);
     if(op){ opts[CIRCLED.includes(op[1]) ? CIRCLED.indexOf(op[1]) : +op[1].replace(/\D/g,"")-1] = op[2].trim(); continue; }
     if(opts.length) opts[opts.length-1] += " " + line; else q.push(line);
@@ -1283,11 +1307,17 @@ function parseQuiz(text){
   if(q.length || opts.length) errs.push(`${items.length+errs.length+1}번: '정답: ②' 줄이 없습니다.`);
   return {items, errs};
 }
-const bankText = items => items.map((it,i)=>`${i+1}번\n\n${it.q}\n\n${it.opts.map((o,k)=>`${CIRCLED[k]} ${o}`).join("\n")}\n\n정답: ${CIRCLED[it.ans-1]}`).join("\n\n");
+const bankText = items => items.map((it,i)=>`${i+1}번${it.sec? ` (${it.sec}초)` : ""}\n\n${it.q}\n\n${it.opts.map((o,k)=>`${CIRCLED[k]} ${o}`).join("\n")}\n\n정답: ${CIRCLED[it.ans-1]}`).join("\n\n");
+// "9·10번 30초" 처럼 따로 시간을 정한 문제를 한 줄로 보여 준다.
+function customTimes(items){
+  const by = {};
+  (items||[]).forEach((it,i)=>{ if(it.sec) (by[it.sec] = by[it.sec] || []).push(i+1); });
+  return Object.entries(by).map(([s,ns])=>`${ns.join("·")}번 ${s}초`).join(", ");
+}
 function readText(file, cb){
   const rd = enc => { const r = new FileReader(); r.onload = ()=>{
     // 메모장의 옛 한글 인코딩이면 글자가 깨진다. 그때는 EUC-KR로 다시 읽는다.
-    if(enc==="utf-8" && String(r.result).includes("�")) return rd("euc-kr");
+    if(enc==="utf-8" && String(r.result).includes(String.fromCharCode(0xFFFD))) return rd("euc-kr");
     cb(String(r.result)); }; r.readAsText(file, enc); };
   rd("utf-8");
 }
@@ -1311,7 +1341,7 @@ function showBank(){
     parsed = parseQuiz(ta.value);
     sv.disabled = !(parsed.items.length && !parsed.errs.length);
     pv.innerHTML = parsed.errs.map(e=>`<p class="bad">${esc(e)}</p>`).join("") +
-      parsed.items.map((it,i)=>`<p>${i+1}. ${esc(it.q)} <strong style="color:var(--ok)">정답 ${CIRCLED[it.ans-1]} ${esc(it.opts[it.ans-1])}</strong></p>`).join("") +
+      parsed.items.map((it,i)=>`<p>${i+1}. ${esc(it.q)} ${it.sec? `<span style="color:var(--navy);font-weight:600">(${it.sec}초)</span> `:""}<strong style="color:var(--ok)">정답 ${CIRCLED[it.ans-1]} ${esc(it.opts[it.ans-1])}</strong></p>`).join("") +
       (parsed.items.length || parsed.errs.length ? "" : `<p style="color:var(--ink-faint)">문제를 찾지 못했습니다.</p>`);
   };
   ta.oninput = update;
@@ -1324,7 +1354,9 @@ function showBank(){
       sv.disabled = true;
       const next = {items:parsed.items, ts:Date.now()};
       FB("quizBank").set(next).then(()=>{
-        BANK = next; o.innerHTML = ""; toast(`${next.items.length}문제를 저장했습니다.`); render();
+        BANK = next; o.innerHTML = ""; toast(`${next.items.length}문제를 저장했습니다.`);
+        if(QZ && QZ.status==="lobby"){ refreshLobbyItems(); saveQuiz(); }
+        render();
       }).catch(e=>{ sv.disabled = false; toast("저장하지 못했습니다. 인터넷을 확인하세요."); });
     }
   };
@@ -1355,8 +1387,14 @@ const setupBase = () => S.students.filter(s=>s.name).map(s=>({id:s.id, name:s.na
 function openQuiz(){
   if(!bankSize()) return showBank();
   if(!QZ) return newQuiz();
-  if(QZ.status!=="done"){ QZ.base = setupBase(); saveQuiz(); }
+  if(QZ.status!=="done"){ refreshLobbyItems(); QZ.base = setupBase(); saveQuiz(); }
   quizOpen = true; attachQuiz(); render();
+}
+// 아직 시작 전이면 저장된 최신 문제로 바꿔 둔다. 문제를 고친 뒤 대기실을 다시 열어도 새 문제로 진행된다.
+function refreshLobbyItems(){
+  if(!QZ || QZ.status!=="lobby" || !bankSize()) return;
+  QZ.items = BANK.items; normQuiz(QZ);
+  PB("quiz/live/n").set(QZ.items.length).catch(e=>{});
 }
 async function newQuiz(){
   const expect = (QZ && QZ.expect) || 11, dur = (QZ && QZ.dur) || 20, auto = QZ ? QZ.auto!==false : true;
@@ -1395,11 +1433,12 @@ function startQuiz(){
 }
 function showQuestion(i){
   const it = QZ.items[i];
-  const startsAt = serverNow() + LEAD, endsAt = startsAt + QZ.dur*1000;
+  const dur = it.sec || QZ.dur;   // 문제마다 정한 시간이 있으면 그것을 쓴다
+  const startsAt = serverNow() + LEAD, endsAt = startsAt + dur*1000;
   Object.assign(QZ, {status:"q", idx:i, startsAt, endsAt});
   qAnswers = {};
   PB("quiz/live").set({id:QZ.id, status:"q", n:QZ.items.length, expect:QZ.expect, idx:i, qk:"q"+i,
-                       q:{text:it.q, opts:it.opts}, startsAt, endsAt, dur:QZ.dur})
+                       q:{text:it.q, opts:it.opts}, startsAt, endsAt, dur})
     .catch(e=>toast("문제를 보내지 못했습니다. 인터넷을 확인하세요."));
   saveQuiz();
   resumeQuestion();
@@ -1485,7 +1524,7 @@ function applyQuizToSetup(){
           || S.students.find(s=>!used.has(s) && !s.name);
     if(!st){ st = freshStudent(sid, "", 0); S.students.push(st); }
     used.add(st);
-    Object.assign(st, {id:sid, name:st.name || p.name, score, seed:500000+score*5000, quiz:c, quizN:n});
+    Object.assign(st, {id:sid, name:st.name || p.name, score, seed:SEED(score), quiz:c, quizN:n});
     st.cash = st.seed;
   });
   return list.length;
@@ -1530,9 +1569,9 @@ function viewQuiz(){
           <div class="chips" id="qzchips">${chipsHTML()}</div>
           <div class="qz-set" style="margin-top:22px">
             <label>참여 인원 <input type="number" id="qzexp" min="1" max="60" value="${QZ.expect}"></label>
-            <label>문제당 <select id="qzdur">${[10,15,20,30,45,60].map(v=>`<option value="${v}" ${v===QZ.dur?"selected":""}>${v}초</option>`).join("")}</select></label>
+            <label>기본 시간 <select id="qzdur">${[10,15,20,30,45,60].map(v=>`<option value="${v}" ${v===QZ.dur?"selected":""}>${v}초</option>`).join("")}</select></label>
             <label><input type="checkbox" id="qzauto" ${QZ.auto!==false?"checked":""}> 다 모이면 자동 시작</label>
-            <span>${n}문제</span>
+            <span>${n}문제${customTimes(QZ.items)? ` · ${customTimes(QZ.items)}` : ""}</span>
           </div>
           <button class="tbtn primary qz-big" id="qzgo" data-a="qstart" style="margin-top:18px" ${cnt?"":"disabled"}>지금 시작</button>
         </div>
@@ -1553,7 +1592,7 @@ function viewQuiz(){
         <button class="tbtn" data-a="qclose">바로 마감</button>
         <button class="tbtn" data-a="qend">끝내기</button></div>
       <div class="qz-meta"><span>남은 시간</span><span class="qz-sec" id="qzsec">${Math.ceil(left/1000)}</span></div>
-      <div class="qbar" id="qzbar"><i style="transform:scaleX(${left/(QZ.dur*1000)})"></i></div>
+      <div class="qbar" id="qzbar"><i style="transform:scaleX(${left/(QZ.endsAt-QZ.startsAt)})"></i></div>
       <div class="qz-q">${esc(it.q)}</div>
       <div class="qz-opts">${optsHTML(it)}</div></div></div>`;
   }
@@ -1583,7 +1622,7 @@ function viewQuiz(){
       <button class="tbtn primary qz-big" data-a="qback">계좌 개설로 →</button></div>
     <div class="card"><div class="bd">
       <p style="font-size:1.4rem;font-weight:700">${ps.length}명 참여 · 평균 ${avg.toFixed(1)}개 정답 <span style="color:var(--ink-faint);font-weight:500">(${asked}문제)</span></p>
-      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 정답 1개 = ${Math.round(100/asked)}점, 시드머니 +${won(Math.round(100/asked)*5000)}원.</p>
+      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 정답 1개 = 시드머니 ${won(SEED(Math.round(100/asked)))}원.</p>
     </div></div>
     <div class="card"><header><h3>문제별 정답률</h3></header><div class="bd">${rates}</div></div>
   </div></div>`;
@@ -1622,7 +1661,7 @@ function quizTick(){   // 계속 돌아야 하면 true
   else if(want==="q"){
     const left = QZ.endsAt-now, hurry = left < 5000;
     const bar = document.getElementById("qzbar"), sec = document.getElementById("qzsec");
-    if(bar){ bar.firstElementChild.style.transform = `scaleX(${left/(QZ.dur*1000)})`; bar.classList.toggle("hurry", hurry); }
+    if(bar){ bar.firstElementChild.style.transform = `scaleX(${left/(QZ.endsAt-QZ.startsAt)})`; bar.classList.toggle("hurry", hurry); }
     if(sec){ sec.textContent = Math.ceil(left/1000); sec.classList.toggle("hurry", hurry); }
   }
   else return false;   // 시간 끝. 마감 처리는 타이머가 한다.
