@@ -229,6 +229,8 @@ input,select{font:inherit;color:inherit}
 .srow .seed{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9rem;color:var(--navy);text-align:right}
 .srow .del{background:none;border:0;color:var(--ink-faint);font-size:1.1rem;line-height:1;padding:4px}
 .srow .del:hover{color:var(--rise)}
+.shead{display:grid;grid-template-columns:28px 1fr 110px 130px 34px;gap:9px;font-size:.78rem;font-weight:600;color:var(--ink-faint);margin-bottom:4px}
+.shead .r{text-align:right}
 .formula{
   background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 15px;
   font-size:.88rem;color:var(--ink-soft);margin:18px 0;
@@ -349,6 +351,7 @@ input,select{font:inherit;color:inherit}
   .tick .px{font-size:1.4rem}
   .srow{grid-template-columns:22px 1fr 84px 34px;}
   .srow .seed{grid-column:2/4;text-align:left}
+  .shead{grid-template-columns:22px 1fr 84px 34px} .shead .r{display:none}
 }
 @media print{.top,.tbtn{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -453,9 +456,12 @@ const VAGUE = ["그냥","느낌","감으로","감이","몰라","모르","아무"
 /* ============================ 상태 ============================ */
 let S = null, store = null, selected = null, openStock = null, toastT = null, snapshot = null, peek = false, joined = {};
 
-// 시드머니 = 기본 50만 원 + 퀴즈 점수(0~100) × 5,000원. 10문제면 정답 1개에 5만 원, 다 맞히면 100만 원.
-const SEED_BASE = 500000, SEED_PER_POINT = 5000;
-const SEED = score => SEED_BASE + Math.round(score*SEED_PER_POINT);
+// 학생의 score는 퀴즈 정답 수다.
+// 시드머니 = 기본 50만 원 + 정답 수에 비례한 금액. 다 맞히면 100만 원(10문제면 정답 1개에 5만 원).
+const SEED_BASE = 500000, SEED_FULL = 1000000;
+const quizTotal = () => bankSize() || 10;   // 문제 수. 저장된 퀴즈가 없으면 10문제로 본다.
+const perCorrect = (n = quizTotal()) => Math.round((SEED_FULL - SEED_BASE) / n);
+const SEED = (score, n = quizTotal()) => SEED_BASE + Math.round((SEED_FULL - SEED_BASE) * Math.min(Math.max(score||0, 0), n) / n);
 function freshStudent(id, name, score){
   const seed = SEED(score);
   return { id, name, score, seed, cash:seed, hold:Object.fromEntries(SK.map(k=>[k,0])),
@@ -672,7 +678,7 @@ function viewSetup(){
     <div class="srow" data-i="${i}">
       <span class="idx">${i+1}</span>
       <input class="f-nm" value="${esc(st.name)}" placeholder="학생 이름" maxlength="12">
-      <input class="f-sc" type="number" min="0" max="100" step="10" value="${st.score}" placeholder="점수">
+      <input class="f-sc" type="number" min="0" max="${quizTotal()}" step="1" value="${st.score}" placeholder="정답 수">
       <span class="seed">${won(SEED(st.score))}원</span>
       <button class="del" data-a="del" title="삭제">×</button>
     </div>`).join("");
@@ -681,9 +687,10 @@ function viewSetup(){
   const nItems = bankSize();
   return `<div class="wrap"><div class="setup">
     <h2>계좌 개설</h2>
-    <p class="lede">퀴즈를 열면 학생들이 휴대폰으로 풀고, 끝나면 이름과 점수가 여기에 자동으로 채워집니다. 직접 입력해도 됩니다.</p>
-    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = ${Math.round(100/(qzDone[0].quizN||10))}점 = 시드머니 +${won(Math.round(100/(qzDone[0].quizN||10))*SEED_PER_POINT)}원</p>`:""}
-    ${rows || `<p class="empty">학생을 추가하세요.</p>`}
+    <p class="lede">퀴즈를 열면 학생들이 휴대폰으로 풀고, 끝나면 이름과 정답 수가 여기에 자동으로 채워집니다. 직접 입력해도 됩니다.</p>
+    ${qzDone.length? `<p class="warn">퀴즈 결과를 넣었습니다 · ${qzDone.length}명 · 정답 1개 = 시드머니 +${won(perCorrect(qzDone[0].quizN||quizTotal()))}원</p>`:""}
+    ${rows ? `<div class="shead"><span></span><span>이름</span><span>퀴즈 정답 수</span><span class="r">시드머니</span><span></span></div>${rows}`
+           : `<p class="empty">학생을 추가하세요.</p>`}
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
       <button class="tbtn primary" data-a="quiz">${qzLive? "퀴즈 화면으로 돌아가기" : QZ && QZ.status==="done"? "퀴즈 결과 보기" : "퀴즈 열기"}</button>
@@ -692,8 +699,8 @@ function viewSetup(){
       <button class="tbtn" data-a="logout">로그아웃</button>
     </div>
     <div class="formula">
-      <strong>시드머니 = 500,000원 + (퀴즈 점수 × 5,000원)</strong> · 10문제면 정답 1개에 5만 원, 다 맞히면 100만 원<br>
-      0점이어도 50만 원은 보장됩니다. 순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
+      <strong>시드머니 = 기본 500,000원 + 정답 1개당 ${won(perCorrect())}원</strong> · ${quizTotal()}문제를 다 맞히면 1,000,000원<br>
+      하나도 못 맞혀도 50만 원은 보장됩니다. 순위는 금액이 아니라 <strong>수익률(%)</strong>로 매기므로 시드머니가 적어도 1등이 가능합니다.
     </div>
     <div class="formula" style="background:var(--navy-wash);border-color:var(--navy-soft)">
       수수료 0.5% · 정보는 라운드당 1인 1건 · 주주총회는 4라운드 종료 후 · 기준금리 충격은 5라운드
@@ -798,7 +805,7 @@ function tradePanel(){
 
   return `
   <div class="card"><header><h3>${esc(st.name)}</h3>
-    <span style="font-size:.82rem;color:var(--ink-faint)">시드 ${won(st.seed)}원 · 퀴즈 ${st.score}점</span></header>
+    <span style="font-size:.82rem;color:var(--ink-faint)">시드 ${won(st.seed)}원 · 퀴즈 정답 ${st.score}개</span></header>
     <div class="bd" style="display:flex;flex-direction:column;gap:12px">
       <div class="acct">
         <div><dt>예수금</dt><dd class="n">${won(st.cash)}</dd></div>
@@ -1021,7 +1028,7 @@ function bindSetup(){
   // 설정 중에는 저장하지 않는다. 저장 왕복이 입력을 덮어쓰는 사고를 원천 차단한다.
   app.querySelectorAll(".f-nm").forEach(el=>el.oninput = ()=> setupCount());
   app.querySelectorAll(".f-sc").forEach(el=>el.oninput = e=>{
-    const v = Math.max(0, Math.min(100, +e.target.value||0));
+    const v = Math.max(0, Math.min(quizTotal(), Math.floor(+e.target.value)||0));
     e.target.closest(".srow").querySelector(".seed").textContent = won(SEED(v))+"원";
   });
   app.onclick = e=>{
@@ -1058,7 +1065,7 @@ function syncSetupFromDOM(){
   S.students = rows.map(row=>{
     const st = S.students[+row.dataset.i];
     const name = (row.querySelector(".f-nm")?.value ?? "").trim();
-    const v = Math.max(0, Math.min(100, +(row.querySelector(".f-sc")?.value) || 0));
+    const v = Math.max(0, Math.min(quizTotal(), Math.floor(+(row.querySelector(".f-sc")?.value)) || 0));
     if(st){ st.name = name; st.score = v; st.seed = SEED(v); st.cash = st.seed; return st; }
     return freshStudent(uid(), name, v);
   });
@@ -1379,7 +1386,7 @@ function quizTotals(){
   return t;
 }
 const playerList = () => Object.entries(qPlayers).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
-// 중간에 끝내면 실제로 낸 문제 수로 점수를 매긴다.
+// 실제로 낸 문제 수(중간에 끝냈을 때 결과 화면에 보여 준다).
 const askedCount = () => QZ.perQ.filter(Boolean).length || QZ.items.length;
 // 퀴즈 전에 직접 적어 둔 명단. 개장 전 설정은 새로고침하면 사라지므로 퀴즈 기록에 같이 둔다.
 const setupBase = () => S.students.filter(s=>s.name).map(s=>({id:s.id, name:s.name, score:s.score}));
@@ -1496,13 +1503,13 @@ function nextQuestion(){
 function finishQuiz(){
   clearTimeout(qTimer);
   QZ.status = "done"; QZ.players = snapPlayers();
-  PB("quiz/live").set({id:QZ.id, status:"done", n:askedCount()}).catch(e=>{});
+  PB("quiz/live").set({id:QZ.id, status:"done", n:QZ.items.length}).catch(e=>{});
   const k = applyQuizToSetup();
   saveQuiz(); render();
-  if(k) toast(`${k}명의 이름과 점수를 계좌 개설에 넣었습니다.`);
+  if(k) toast(`${k}명의 이름과 정답 수를 계좌 개설에 넣었습니다.`);
 }
 function endQuizEarly(){
-  overlay(`<h3>퀴즈 끝내기</h3><p>지금까지 푼 문제로 점수를 매기고 끝냅니다.</p>
+  overlay(`<h3>퀴즈 끝내기</h3><p>지금까지 맞힌 개수로 시드머니를 정하고 끝냅니다.</p>
     <div class="row"><button class="tbtn" data-x="no">계속하기</button><button class="tbtn danger" data-x="yes">끝내기</button></div>`,
     async x=>{ if(x!=="yes") return; if(QZ.status==="q") await closeQuestion(); finishQuiz(); });
 }
@@ -1516,15 +1523,15 @@ function confirmNewQuiz(){
 // 학생 번호(id)를 퀴즈 때 받은 번호로 맞춰 두면, 개장했을 때 같은 휴대폰이 바로 자기 계좌로 들어간다.
 function applyQuizToSetup(){
   if(!QZ || S.phase!=="setup") return 0;
-  const tot = quizTotals(), n = askedCount(), used = new Set();
+  const tot = quizTotals(), n = QZ.items.length, used = new Set();
   const list = Object.entries(QZ.players||{}).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
   list.forEach(([sid,p])=>{
-    const c = tot[sid]||0, score = Math.round(c*100/n);
+    const c = tot[sid]||0, score = c;
     let st = S.students.find(s=>!used.has(s) && s.name && normName(s.name)===normName(p.name))
           || S.students.find(s=>!used.has(s) && !s.name);
     if(!st){ st = freshStudent(sid, "", 0); S.students.push(st); }
     used.add(st);
-    Object.assign(st, {id:sid, name:st.name || p.name, score, seed:SEED(score), quiz:c, quizN:n});
+    Object.assign(st, {id:sid, name:st.name || p.name, score, seed:SEED(score, n), quiz:c, quizN:n});
     st.cash = st.seed;
   });
   return list.length;
@@ -1622,7 +1629,7 @@ function viewQuiz(){
       <button class="tbtn primary qz-big" data-a="qback">계좌 개설로 →</button></div>
     <div class="card"><div class="bd">
       <p style="font-size:1.4rem;font-weight:700">${ps.length}명 참여 · 평균 ${avg.toFixed(1)}개 정답 <span style="color:var(--ink-faint);font-weight:500">(${asked}문제)</span></p>
-      <p style="color:var(--ink-soft);margin-top:4px">이름과 점수를 계좌 개설 화면에 넣었습니다. 시드머니는 기본 ${won(SEED_BASE)}원 + 정답 1개당 ${won(Math.round(100/asked)*SEED_PER_POINT)}원.</p>
+      <p style="color:var(--ink-soft);margin-top:4px">이름과 정답 수를 계좌 개설 화면에 넣었습니다. 시드머니는 기본 ${won(SEED_BASE)}원 + 정답 1개당 ${won(perCorrect(n))}원.</p>
     </div></div>
     <div class="card"><header><h3>문제별 정답률</h3></header><div class="bd">${rates}</div></div>
   </div></div>`;
@@ -1712,7 +1719,7 @@ const csvRow = arr => arr.map(csvCell).join(",");
 const stamp2 = () => new Date().toISOString().slice(0,10);
 
 function exportSummary(){
-  const head = ["이름","퀴즈점수","시드머니","최종예수금","주식평가액","총자산","수익률(%)",
+  const head = ["이름","퀴즈정답수","시드머니","최종예수금","주식평가액","총자산","수익률(%)",
                 "매매횟수","수수료합계","정보구매수","공시","기사","소문","주총발언","보유종목수","최대집중도(%)"];
   const rows = S.students.map(st=>{
     const sv = stockVal(st,S.prices), tot = total(st,S.prices);

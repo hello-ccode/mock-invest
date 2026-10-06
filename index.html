@@ -370,12 +370,12 @@ function viewQuiz(){
   }
   // done
   qShown="done";
-  // 선생님이 중간에 끝내면 실제로 푼 문제 수가 기준이다.
-  const asked= (QRES && QRES.done) || n;
-  const c= QRES ? QRES.correct : null, sc= c===null||!asked ? null : Math.round(c*100/asked);
+  // 시드머니 = 기본 50만 원 + 정답 수에 비례(다 맞히면 100만 원). 선생님 화면과 같은 공식이다.
+  const total= (QRES && QRES.n) || n, asked= (QRES && QRES.done) || total;
+  const c= QRES ? QRES.correct : null, seed= c===null||!total ? null : 500000+Math.round(500000*Math.min(c,total)/total);
   return `<div class="wrap"><div class="qz">
     <div class="qres ok"><b>퀴즈 끝!</b>${c===null? "결과를 정리하는 중이에요." : `${asked}문제 중 ${c}개 정답`}</div>
-    ${sc!==null? `<p class="lede">시드머니 <strong class="n">${won(500000+sc*5000)}원</strong>으로 모의투자를 시작해요.</p>`:""}
+    ${seed!==null? `<p class="lede">시드머니 <strong class="n">${won(seed)}원</strong>으로 모의투자를 시작해요.</p>`:""}
     <p class="secret">선생님이 모의투자를 열면 이 화면이 바로 바뀌어요.</p>
   </div></div>`;
 }
