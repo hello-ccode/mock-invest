@@ -68,6 +68,8 @@ section{margin-top:14px}
   color:var(--ink-faint);display:block;margin-bottom:3px}
 .free.shock .lbl{color:var(--rise)}
 .free .tx{font-weight:600;font-size:1.02rem}
+.free .item{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;margin-top:5px}
+.free .who{font-size:.68rem;font-weight:700;color:var(--navy);background:var(--navy-wash);border-radius:4px;padding:.08em .45em;white-space:nowrap}
 .free .sub{font-size:.8rem;color:var(--ink-faint);margin-top:3px}
 
 /* stock rows */
@@ -225,6 +227,7 @@ const won=n=>Math.round(n||0).toLocaleString("ko-KR");
 const sgn=v=>v>0?"+":"";
 const cls=v=>v>0?"rise":v<0?"fall":"flat";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const whoLabel=w=>w==="전체"?"시장 전체":w==="속보"?"":(w||"");
 
 firebase.initializeApp(firebaseConfig);
 const DB=firebase.database();
@@ -547,6 +550,7 @@ function viewMain(){
     || `<span class="hb" style="opacity:.55">보유 없음</span>`;
 
   const f=ST.free||{};
+  const freeNews = f.items || (f.tx ? [{who:"", tx:f.tx}] : []);   // 예전 형식(뉴스 한 건)도 받아 준다
   const fb = (ST.phase==="debrief" && FBK) ? `
     <section><div class="card"><h3>오늘의 나 — 개인 피드백</h3>
       <div class="fbbd">
@@ -571,10 +575,10 @@ function viewMain(){
   <div class="status ${open?"open":""}">${open?"● 지금 주문할 수 있습니다":"주문 마감 — 결과를 기다리세요"}</div>
   <div class="wrap">
     ${fb}
-    ${f.tx?`<section><div class="free ${f.shock?"shock":""}">
+    ${freeNews.length?`<section><div class="free ${f.shock?"shock":""}">
       <span class="lbl">${f.shock?"속보":"오늘의 뉴스"}</span>
-      <div class="tx">${esc(f.tx)}</div>
-      <div class="sub">${esc(f.sub||"모두가 보는 뉴스입니다. 이미 주가에 반영되어 있어요.")}</div></div></section>`:""}
+      ${freeNews.map(n=>`<div class="item">${whoLabel(n.who)?`<span class="who">${esc(whoLabel(n.who))}</span>`:""}<span class="tx">${esc(n.tx)}</span></div>`).join("")}
+      <div class="sub">${esc(f.sub||"모두가 보는 뉴스입니다. 어느 회사에 좋은 소식인지, 나쁜 소식인지 따져 보세요.")}</div></div></section>`:""}
     <section><div class="card"><h3>시세 · 주문</h3>${rows}</div></section>
     <section><div class="card"><h3>회사별 투자 기준 · 눌러서 보기</h3>${STOCKS.map(s=>`
       <div class="srow"><button class="ibtn" data-a="info" data-k="${s.k}">

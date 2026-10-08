@@ -130,6 +130,8 @@ input,select{font:inherit;color:inherit}
 .newsbar.shock .lbl{color:var(--rise);border-color:var(--rise)}
 .newsbar .tx{font-size:1.02rem;font-weight:500}
 .newsbar .sub{font-size:.84rem;color:var(--ink-faint);margin-top:2px}
+.newsbar .item{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:3px}
+.newsbar .who{font-size:.74rem;font-weight:700;color:var(--navy);background:var(--navy-wash);border-radius:4px;padding:.08em .45em;white-space:nowrap}
 
 /* student grid */
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
@@ -405,6 +407,7 @@ const TIERS = {
 const ROUNDS = [
   { n:1, title:"순한 출발 · 첫 오보 경험",
     free:{who:"전체", tx:"이번 분기 소비 지출, 작년과 비슷한 수준 유지"},
+    free2:{who:"번쩍모빌리티", tx:"전기차 판매 증가세, 지난달보다 주춤"},
     paid:[
       {tier:"disc", s:"FOOD", tx:"신규 라면 브랜드 매출, 전분기 대비 32% 증가", hit:true},
       {tier:"news", s:"GAME", tx:"신작 게임 사전예약 100만 명 돌파", hit:true},
@@ -413,6 +416,7 @@ const ROUNDS = [
     ch:{FOOD:5, LOGI:2, MED:-1, GAME:12, EV:-9} },
   { n:2, title:"첫 해석형 뉴스",
     free:{who:"달려라택배", tx:"택배 물동량, 명절 앞두고 증가세"},
+    free2:{who:"해맑은병원", tx:"병원 업계, 새 시설 투자 비용 부담 커져"},
     paid:[
       {tier:"disc", s:"MED",  tx:"신규 검진센터 2곳 개소, 투자비 200억 집행", hit:null, interp:true},
       {tier:"news", s:"FOOD", tx:"원재료 밀 가격 15% 상승", hit:true},
@@ -421,6 +425,7 @@ const ROUNDS = [
     ch:{FOOD:-5, LOGI:4, MED:-4, GAME:8, EV:3} },
   { n:3, title:"긴 호흡의 뉴스 — 결과는 7·8라운드에",
     free:{who:"전체", tx:"게임 산업 전체 성장률 둔화 전망"},
+    free2:{who:"달려라택배", tx:"택배 업계, 손님을 잡기 위한 가격 경쟁 치열"},
     paid:[
       {tier:"disc", s:"EV",   tx:"해외 공장 신설에 5,000억 투자 결정", hit:null, interp:true, longarc:"결과는 8라운드에"},
       {tier:"news", s:"LOGI", tx:"경쟁사 대비 배송료 20% 인하 발표", hit:null, interp:true, longarc:"결과는 7라운드에"},
@@ -429,6 +434,7 @@ const ROUNDS = [
     ch:{FOOD:1, LOGI:-6, MED:0, GAME:-3, EV:14} },
   { n:4, title:"주주총회 직전",
     free:{who:"해맑은병원", tx:"정부, 헬스케어 산업 지원 확대 검토"},
+    free2:{who:"번쩍모빌리티", tx:"전기차 업체들, 가격 할인 경쟁 시작"},
     paid:[
       {tier:"disc", s:"GAME", tx:"창업자 겸 대표이사 사임", hit:null, interp:true},
       {tier:"news", s:"FOOD", tx:"해외 수출 첫 계약 체결", hit:true},
@@ -438,10 +444,12 @@ const ROUNDS = [
   { n:5, title:"기준금리 인상 — 시장 전체 충격", shock:true,
     free:{who:"속보", tx:"한국은행, 기준금리 0.5%p 인상 발표",
           sub:"전 종목 동시 하락. 개별 정보로는 피할 수 없는 체계적 위험입니다. 이번 라운드는 정보를 판매하지 않습니다."},
+    free2:{who:"전문가 분석", tx:"금리가 오르면 미래 기대가 큰 성장주가 더 크게 흔들린다"},
     paid:[],
     ch:{FOOD:-4, LOGI:-9, MED:-6, GAME:-13, EV:-22} },
   { n:6, title:"충격 직후 — 안정주가 먼저 돌아온다",
     free:{who:"전체", tx:"금리 인상 후 소비 심리 위축"},
+    free2:{who:"해맑은병원", tx:"건강검진 예약, 경기와 상관없이 꾸준"},
     paid:[
       {tier:"disc", s:"FOOD", tx:"배당 확대 결정", hit:true},
       {tier:"news", s:"EV",   tx:"전기차 보조금 축소 검토", hit:true},
@@ -450,6 +458,7 @@ const ROUNDS = [
     ch:{FOOD:7, LOGI:1, MED:3, GAME:-7, EV:-11} },
   { n:7, title:"3라운드 배송료 뉴스의 답",
     free:{who:"전체", tx:"증시 반등 조짐, 외국인 순매수 전환"},
+    free2:{who:"한입식품", tx:"국제 밀 가격, 오름세 멈추고 안정"},
     paid:[
       {tier:"news", s:"LOGI", tx:"배송료 인하 후 시장 점유율 8%p 상승", hit:true, payoff:"3라운드 해석형의 결과"},
       {tier:"disc", s:"MED",  tx:"신규 검진센터 예약률 90% 기록", hit:true, payoff:"2라운드 해석형의 결과"},
@@ -458,6 +467,7 @@ const ROUNDS = [
     ch:{FOOD:3, LOGI:16, MED:9, GAME:2, EV:5} },
   { n:8, title:"3라운드 공장 투자의 답 · 마지막 라운드",
     free:{who:"전체", tx:"분기 실적 발표 시즌 마무리"},
+    free2:{who:"픽셀게임즈", tx:"게임 업계, 신작 개발 기간이 길어지는 추세"},
     paid:[
       {tier:"disc", s:"EV",   tx:"해외 공장 첫 가동, 수주 3,000억 확보", hit:true, payoff:"3라운드 해석형의 결과"},
       {tier:"news", s:"GAME", tx:"신작 출시 3개월 연기", hit:null, interp:true},
@@ -552,11 +562,14 @@ function persist(){
 
 // 학생 화면이 볼 수 있는 정보만 상태에 실어 보낸다.
 // 유료 뉴스의 '내용'은 절대 여기 담지 않는다 — 산 학생의 비공개 경로로만 간다.
+// 무료 뉴스는 라운드마다 두 건(free, free2). 주가는 라운드를 마감할 때 움직이므로 뉴스를 근거로 판단할 수 있다.
+const FREE_SUB = "모두가 보는 뉴스입니다. 어느 회사에 좋은 소식인지, 나쁜 소식인지 따져 보세요.";
+const freeItems = R => [R.free, R.free2].filter(Boolean).map(n=>({who:n.who, tx:n.tx}));
+const whoLabel = w => w==="전체" ? "시장 전체" : w==="속보" ? "" : w;
 function stamp(){
   const R = ROUNDS[S.round-1];
   if(!R){ S.free=null; S.offers=[]; return; }
-  S.free = { tx:R.free.tx, shock:!!R.shock,
-             sub: R.shock? R.free.sub : `${R.free.who} · 모두가 보는 뉴스입니다. 이미 주가에 반영되어 있어요.` };
+  S.free = { shock:!!R.shock, sub: R.shock? R.free.sub : FREE_SUB, items: freeItems(R) };
   S.offers = (S.revealed || S.phase!=="play") ? [] : R.paid.map(p=>({tier:p.tier, s:p.s}));
 }
 
@@ -738,8 +751,8 @@ function freeNewsHTML(){
   const R = curRound();
   return `<div class="newsbar ${R.shock?"shock":""}">
       <span class="lbl">${R.shock?"속보":"무료"}</span>
-      <div><div class="tx">${esc(R.free.tx)}</div>
-      <div class="sub">${R.shock? esc(R.free.sub) : `${esc(R.free.who)} · 이미 주가에 반영되어 있습니다. 보고 사면 늦습니다.`}</div></div>
+      <div>${freeItems(R).map(n=>`<div class="item">${whoLabel(n.who)? `<span class="who">${esc(whoLabel(n.who))}</span>`:""}<span class="tx">${esc(n.tx)}</span></div>`).join("")}
+      <div class="sub">${esc(R.shock? R.free.sub : FREE_SUB)}</div></div>
     </div>`;
 }
 const companiesHTML = () => `<div class="cogrid">${STOCKS.map(s=>`
@@ -1949,6 +1962,7 @@ async function boot(){
     if(QZ.status==="done" && !QZ.applied) applyQuizToSetup();
     if(["lobby","q","reveal"].includes(QZ.status)){ quizOpen = true; attachQuiz(); }
   }
+  stamp();      // 예전 형식으로 저장된 뉴스도 지금 형식으로 다시 만든다
   render();
   publishPub();
   watchShared();
