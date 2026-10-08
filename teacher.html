@@ -689,8 +689,8 @@ function topBar(){
     <button class="tbtn" data-a="qr">학생 접속 QR</button>
     <span class="phasechip">접속 ${S.students.filter(s=>joined[s.id]).length}/${S.students.length}</span>
     ${!present && S.phase!=="debrief"? `<button class="tbtn" data-a="interest">이자 일괄 지급 5%</button>`:""}
-    ${present? "" : `<button class="tbtn" data-a="reset">전체 초기화</button>
-    <button class="tbtn" data-a="logout">로그아웃</button>`}
+    <button class="tbtn" data-a="reset">전체 초기화</button>
+    ${present? "" : `<button class="tbtn" data-a="logout">로그아웃</button>`}
     <button class="tbtn" data-a="present">${present? "관리 화면으로" : "교실 화면으로"}</button>
     ${right}
   </div></div>`;
@@ -729,7 +729,7 @@ function viewSetup(){
            : `<p class="empty">학생을 추가하세요.</p>`}
     <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
       <button class="tbtn" data-a="add">＋ 학생 추가</button>
-      <button class="tbtn primary" data-a="quiz">${qzLive? "퀴즈 화면으로 돌아가기" : QZ && QZ.status==="done"? "퀴즈 결과 보기" : "퀴즈 열기"}</button>
+      <button class="tbtn primary" data-a="quiz">${qzLive? "퀴즈 화면으로 돌아가기" : QZ && QZ.status==="done" && !QZ.applied? "퀴즈 결과 보기" : "퀴즈 열기"}</button>
       <button class="tbtn" data-a="qbank">퀴즈 문제${nItems? ` (${nItems})` : " 넣기"}</button>
       <button class="tbtn" data-a="qr">학생 접속 QR 보기</button>
       <button class="tbtn" data-a="logout">로그아웃</button>
@@ -1480,7 +1480,7 @@ const setupBase = () => S.students.filter(s=>s.name).map(s=>({id:s.id, name:s.na
 
 function openQuiz(){
   if(!bankSize()) return showBank();
-  if(!QZ) return newQuiz();
+  if(!QZ || (QZ.status==="done" && QZ.applied)) return newQuiz();   // 지난 수업에서 이미 쓴 퀴즈면 새로 연다
   if(QZ.status!=="done"){ refreshLobbyItems(); QZ.base = setupBase(); saveQuiz(); }
   quizOpen = true; attachQuiz(); render();
 }
