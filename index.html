@@ -210,11 +210,11 @@ section{margin-top:14px}
 <script>
 // tag·pts: 회사별 투자 기준. 선생님 화면(teacher.html)·수업 PPT와 같은 내용이다. 고치면 함께 고친다.
 const STOCKS=[
-  {k:"FOOD",nm:"한입식품",sec:"식품", tag:"경기 방어주", pts:["경기가 나빠도 사람은 먹는다 — 불황에도 잘 버틴다","밀 같은 원재료 값이 오르면 이익이 줄어든다","신제품 인기·해외 수출은 좋은 소식","주가가 크게 오르내리지 않는다"]},
-  {k:"LOGI",nm:"달려라택배",sec:"물류", tag:"소비 연동주", pts:["온라인 쇼핑·명절로 물건이 많이 오가면 이익이 는다","기름값이 오르면 비용이 늘어난다","배송료 인하는 당장 손해, 손님이 늘면 나중에 이익","사람들이 지갑을 닫으면(소비 위축) 같이 줄어든다"]},
-  {k:"MED", nm:"해맑은병원",sec:"헬스케어", tag:"꾸준한 방어주", pts:["경기와 상관없이 건강검진 수요는 꾸준하다","새 센터 같은 큰 투자는 당장 비용, 손님이 차면 이익","정부의 헬스케어 지원 정책에 영향을 받는다","크게 튀지 않는다"]},
-  {k:"GAME",nm:"픽셀게임즈",sec:"게임", tag:"흥행 의존주", pts:["신작 하나의 흥행에 회사가 걸려 있다","대표 교체·출시 연기는 나쁜 소식","게임 산업 전체 분위기에도 영향을 받는다","흥하면 크게 오르고, 망하면 크게 떨어진다"]},
-  {k:"EV",  nm:"번쩍모빌리티",sec:"전기차·배터리", tag:"성장주 · 변동 가장 큼", pts:["아직 돈은 못 벌지만 미래 기대로 값이 매겨진다","금리가 오르면 크게 흔들린다","정부 보조금 정책에 민감하다","공장 같은 큰 투자는 결과가 나오기까지 시간이 걸린다"]},
+  {k:"FOOD",nm:"한입식품",sec:"식품", tag:"불황에도 잘 버텨요", pts:["경기가 안 좋아도 라면과 과자는 계속 사 먹어요. 그래서 불황에도 잘 버텨요.","밀가루 값이 오르면 만드는 비용이 늘어서 이익이 줄어요.","새 라면이 인기를 끌거나 외국에 수출하게 되면 좋은 소식이에요.","주가가 크게 오르내리지 않는 편이에요."]},
+  {k:"LOGI",nm:"달려라택배",sec:"물류", tag:"쇼핑이 늘면 바빠져요", pts:["인터넷 쇼핑을 많이 하거나 명절에 선물을 많이 보내면 일이 늘고 돈을 벌어요.","기름값이 오르면 트럭을 움직이는 비용이 늘어나요.","배송비를 깎아 주면 당장은 손해지만, 손님이 늘면 나중에 이득이 될 수 있어요.","사람들이 돈을 아끼기 시작하면 택배도 줄어들어요."]},
+  {k:"MED", nm:"해맑은병원",sec:"헬스케어", tag:"꾸준하고 안정적이에요", pts:["경기와 상관없이 건강검진을 받는 사람은 늘 있어서 꾸준한 편이에요.","새 검진센터를 지으면 처음엔 돈이 많이 들지만, 손님이 차면 이익이 늘어요.","정부가 건강과 의료 분야를 지원하면 좋은 소식이에요.","주가가 크게 튀지 않아요."]},
+  {k:"GAME",nm:"픽셀게임즈",sec:"게임", tag:"신작에 울고 웃어요", pts:["새로 내는 게임 하나가 잘되느냐에 회사 실적이 크게 달려 있어요.","게임 출시가 미뤄지거나 대표가 갑자기 바뀌면 나쁜 소식이에요.","게임 산업 전체가 잘나가는지, 주춤한지에도 영향을 받아요.","대박이 나면 크게 오르고, 실패하면 크게 떨어져요."]},
+  {k:"EV",  nm:"번쩍모빌리티",sec:"전기차·배터리", tag:"미래 기대로 움직여요", pts:["아직 돈을 많이 벌지는 못하지만, 앞으로 크게 클 거라는 기대로 주가가 움직여요.","금리(이자)가 오르면 이런 회사의 주가가 특히 크게 흔들려요.","정부가 전기차 보조금을 늘리거나 줄이면 큰 영향을 받아요.","새 공장처럼 큰 투자는 결과가 나오기까지 시간이 걸려요."]},
 ];
 const SK=STOCKS.map(s=>s.k), SNAME=Object.fromEntries(STOCKS.map(s=>[s.k,s.nm]));
 const TIERS={
@@ -263,7 +263,8 @@ function watchNews(){
 let started=false;
 function start(){
   if(started) return; started=true;
-  R("state").on("value", s=>{ ST=s.val(); loaded=true; draw(); }, permErr);
+  // 다른 학생이 거래해도 공유 상태가 바뀐다. 내 화면에 보이는 값이 그대로면 다시 그리지 않는다.
+  R("state").on("value", s=>{ ST=s.val(); loaded=true; const k=viewKey(); if(k===lastKey) return; lastKey=k; draw(); }, permErr);
   R("msg").on("value", s=>{
     const m=(s.val()||{})[MY]; if(!m||!m.ts) return;
     let last=0; try{ last=+localStorage.getItem("hb_msg")||0; }catch(e){}
@@ -289,10 +290,34 @@ if(!/^[a-z0-9]{8,40}$/i.test(TOKEN)){
 
 // Firebase는 구멍 난 배열을 객체로 돌려주기도 한다. 양쪽 다 받아준다.
 function roster(){ const s=ST&&ST.students; return Array.isArray(s)? s : Object.values(s||{}); }
+// 이 학생 화면에 영향을 주는 값만 모은 것. 로그인 전에는 명단(이름 목록)도 포함한다.
+let lastKey="";
+function viewKey(){
+  if(!ST) return "none";
+  const m = MY && roster().find(s=>s.id===MY);
+  return JSON.stringify([ST.phase, ST.round, ST.revealed, ST.prices, ST.prev, ST.free, ST.offers,
+                         m || roster().map(s=>s.id+":"+s.name)]);
+}
 function me(){ return roster().find(s=>s.id===MY) || null; }
 
-function draw(){
+// 이름·매수 이유·수량을 입력하는 동안에는 화면을 새로 그리지 않는다.
+// 다른 학생이 주문할 때마다 화면 전체를 다시 그리면, 입력 칸이 새 칸으로 바뀌면서
+// 휴대폰 키보드가 닫히고 쓰던 한글이 끊기거나 사라진다. 입력이 끝나면(칸을 벗어나면) 그때 그린다.
+let drawLater=false;
+const TYPING_IDS=["reason","qty","nm","qn"];
+function isTyping(){
+  const ae=document.activeElement;
+  return !!(ae && TYPING_IDS.includes(ae.id) && document.getElementById("app").contains(ae));
+}
+function drawWhenDone(){
+  setTimeout(()=>{ if(drawLater && !isTyping()) draw(); }, 400);   // 매수 버튼 누름이 먼저 처리되도록 조금 기다린다
+}
+// 다른 앱에 다녀오면 입력 칸에 커서가 남아 있어도 미뤄 둔 화면을 그린다.
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && drawLater) draw(true); });
+function draw(force){
   const app=document.getElementById("app");
+  if(!force && isTyping()){ drawLater=true; soft(); return; }
+  drawLater=false;
   if(!ST){
     say(loaded ? "이 주소는 더 이상 사용할 수 없습니다. 선생님께 새 QR을 받으세요." : "연결 중…"); return;
   }
@@ -392,7 +417,7 @@ function bindQuiz(){
   const app=document.getElementById("app");
   const f=app.querySelector("#qf");
   if(f){ const inp=app.querySelector("#qn");
-    inp.oninput=e=>{ qName=e.target.value; };
+    inp.oninput=e=>{ qName=e.target.value; }; inp.onblur=drawWhenDone;
     f.onsubmit=e=>{ e.preventDefault(); joinQuiz(inp.value); };
     setTimeout(()=>inp.focus(),50); }
   app.onclick=e=>{ const b=e.target.closest("[data-a]"); if(b && b.dataset.a==="qpick") pickAnswer(+b.dataset.k); };
@@ -402,27 +427,27 @@ async function joinQuiz(raw){
   if(joining) return;
   const name=String(raw||"").trim().replace(/\s+/g," ");
   qName=name;
-  if(!name){ qErr="이름을 입력하세요."; return draw(); }
+  if(!name){ qErr="이름을 입력하세요."; return draw(true); }
   if(Object.values(QP).some(p=>norm(p.name)===norm(name))){
-    qErr="이미 같은 이름으로 들어온 사람이 있어요. 동명이인이면 이름 뒤에 숫자를 붙여 주세요."; return draw(); }
-  joining=true; qErr=""; draw();
+    qErr="이미 같은 이름으로 들어온 사람이 있어요. 동명이인이면 이름 뒤에 숫자를 붙여 주세요."; return draw(true); }
+  joining=true; qErr=""; draw(true);
   const sid="s"+Math.random().toString(36).slice(2,9);
   try{
     await R(`quiz/players/${sid}`).set({name, uid:AUTH.currentUser.uid, ts:Date.now()});
     MY=sid; try{ localStorage.setItem("hb_sid",MY); }catch(e){}
     qName=""; watchNews();
   }catch(e){ qErr="입장하지 못했어요. 선생님께 알려 주세요."; }
-  joining=false; draw();
+  joining=false; draw(true);
 }
 function pickAnswer(k){
   if(!QL || QL.status!=="q" || pickedNow()) return;
   const now=serverNow(); if(now<QL.startsAt || now>QL.endsAt) return;
   myPick={id:QL.id, qk:QL.qk, k};
   try{ localStorage.setItem("hb_qpick",JSON.stringify(myPick)); }catch(e){}
-  draw();
+  draw(true);
   R(`quiz/answers/${QL.qk}/${MY}`).set(k).catch(()=>{
     myPick=null; try{ localStorage.removeItem("hb_qpick"); }catch(e){}
-    toast("제출하지 못했어요. 시간이 끝났을 수 있어요.", true); draw();
+    toast("제출하지 못했어요. 시간이 끝났을 수 있어요.", true); draw(true);
   });
 }
 // 시간 바와 남은 초는 서버 시각으로 매 프레임 계산한다. 모든 휴대폰과 교실 화면이 같은 순간에 끝난다.
@@ -472,17 +497,17 @@ const norm = s => String(s||"").replace(/\s+/g,"").toLowerCase();
 function tryLogin(raw){
   loginName = raw;
   const key = norm(raw);
-  if(!key){ loginErr="이름을 입력하세요."; return draw(); }
+  if(!key){ loginErr="이름을 입력하세요."; return draw(true); }
   const hit = roster().find(s=>norm(s.name)===key);
   if(!hit){
     loginErr = `"${raw.trim()}" 은(는) 명단에 없습니다. 띄어쓰기 없이 정확히 입력해 보세요.`;
-    showList = true; return draw();
+    showList = true; return draw(true);
   }
   loginErr=""; loginName=""; claim(hit.id);
 }
 function claim(id){
   MY=id; try{ localStorage.setItem("hb_sid",MY); }catch(e){}
-  R(`joined/${MY}`).set(true); watchNews(); draw();
+  R(`joined/${MY}`).set(true); watchNews(); draw(true);
 }
 
 function viewMain(){
@@ -580,7 +605,7 @@ function viewMain(){
       ${freeNews.map(n=>`<div class="item">${whoLabel(n.who)?`<span class="who">${esc(whoLabel(n.who))}</span>`:""}<span class="tx">${esc(n.tx)}</span></div>`).join("")}
       <div class="sub">${esc(f.sub||"모두가 보는 뉴스입니다. 어느 회사에 좋은 소식인지, 나쁜 소식인지 따져 보세요.")}</div></div></section>`:""}
     <section><div class="card"><h3>시세 · 주문</h3>${rows}</div></section>
-    <section><div class="card"><h3>회사별 투자 기준 · 눌러서 보기</h3>${STOCKS.map(s=>`
+    <section><div class="card"><h3>회사별 투자 기준 (눌러서 보기)</h3>${STOCKS.map(s=>`
       <div class="srow"><button class="ibtn" data-a="info" data-k="${s.k}">
         <span class="nm">${s.nm}</span><span class="pill t-disc">${s.tag}</span><span class="ar">${infoK===s.k?"▲":"▼"}</span></button>
         ${infoK===s.k? `<ul class="pts">${s.pts.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}</div>`).join("")}
@@ -594,24 +619,24 @@ function viewMain(){
 function bind(){
   const app=document.getElementById("app");
   const qi=app.querySelector("#qty"), ri=app.querySelector("#reason");
-  if(qi) qi.oninput=e=>{ qty=Math.max(0,Math.floor(+e.target.value||0)); soft(); };
-  if(ri) ri.oninput=e=>{ reason=e.target.value; soft(); };
+  if(qi){ qi.oninput=e=>{ qty=Math.max(0,Math.floor(+e.target.value||0)); soft(); }; qi.onblur=drawWhenDone; }
+  if(ri){ ri.oninput=e=>{ reason=e.target.value; soft(); }; ri.onblur=drawWhenDone; }
   const lf=app.querySelector("#lf"), nm=app.querySelector("#nm");
   if(lf){ lf.onsubmit=e=>{ e.preventDefault(); tryLogin(nm.value); };
-          nm.oninput=e=>{ loginName=e.target.value; };
+          nm.oninput=e=>{ loginName=e.target.value; }; nm.onblur=drawWhenDone;
           if(!showList) setTimeout(()=>nm.focus(),50); }
   app.onclick=e=>{
     const b=e.target.closest("[data-a]"); if(!b) return;
     const a=b.dataset.a, m=me();
-    if(a==="togglelist"){ showList=!showList; draw(); return; }
+    if(a==="togglelist"){ showList=!showList; draw(true); return; }
     if(a==="pick"){ loginErr=""; loginName=""; showList=false; claim(b.dataset.id); return; }
     if(a==="out"){ try{localStorage.removeItem("hb_sid");}catch(e){} MY=null; mine=[]; FBK=null; watchNews();
-      loginName=""; loginErr=""; showList=false; draw(); return; }
-    if(a==="open"){ openK=openK===b.dataset.k?null:b.dataset.k; qty=10; reason=""; draw(); return; }
-    if(a==="info"){ infoK=infoK===b.dataset.k?null:b.dataset.k; draw(); return; }
-    if(a==="q"){ qty=Math.max(0,qty+(+b.dataset.v)); draw(); return; }
-    if(a==="qs"){ qty=+b.dataset.v; draw(); return; }
-    if(a==="qmax"){ qty=Math.floor(m.cash/((ST.prices[b.dataset.k]||1)*(1+FEE))); draw(); return; }
+      loginName=""; loginErr=""; showList=false; draw(true); return; }
+    if(a==="open"){ openK=openK===b.dataset.k?null:b.dataset.k; qty=10; reason=""; draw(true); return; }
+    if(a==="info"){ infoK=infoK===b.dataset.k?null:b.dataset.k; draw(true); return; }
+    if(a==="q"){ qty=Math.max(0,qty+(+b.dataset.v)); draw(true); return; }
+    if(a==="qs"){ qty=+b.dataset.v; draw(true); return; }
+    if(a==="qmax"){ qty=Math.floor(m.cash/((ST.prices[b.dataset.k]||1)*(1+FEE))); draw(true); return; }
     if(a==="buy") return send({kind:"buy", s:b.dataset.k, qty, reason:reason.trim()});
     if(a==="sell") return send({kind:"sell", s:b.dataset.k, qty, reason:reason.trim()});
     if(a==="news"){ const o=(ST.offers||[])[+b.dataset.i];
@@ -619,14 +644,16 @@ function bind(){
   };
 }
 function soft(){
+  if(!ST || !ST.prices) return;
   const m=me(); if(!m||!openK) return;
+  const open=!ST.revealed && ST.phase==="play";   // 입력하는 사이에 라운드가 마감되면 주문 버튼을 막는다
   const cur=ST.prices[openK]||0;
   const c=document.querySelector(".cost");
   if(c) c.textContent=`매수 ${won(qty*cur*(1+FEE))}원 · 매도 ${won(qty*cur*(1-FEE))}원 · 수수료 0.5%`;
   const bb=document.querySelector(".acts .b"), sb=document.querySelector(".acts .s"),
         ri=document.querySelector("#reason");
-  if(bb) bb.disabled=!(qty>0&&reason.trim()&&m.cash>=qty*cur*(1+FEE)&&!sending);
-  if(sb) sb.disabled=!(qty>0&&(m.hold?.[openK]||0)>=qty&&!sending);
+  if(bb) bb.disabled=!(open&&qty>0&&reason.trim()&&m.cash>=qty*cur*(1+FEE)&&!sending);
+  if(sb) sb.disabled=!(open&&qty>0&&(m.hold?.[openK]||0)>=qty&&!sending);
   if(ri) ri.classList.toggle("need",!reason.trim());
 }
 
@@ -637,7 +664,7 @@ function send(o){
   R("orders").push({...o, sid:MY, round:ST.round, ts:Date.now()})
     .then(()=>{ toast("주문을 보냈습니다."); qty=10; reason=""; openK=null; })
     .catch(()=>toast("전송에 실패했습니다. 다시 눌러주세요.",true))
-    .finally(()=>{ sending=false; draw(); });
+    .finally(()=>{ sending=false; draw(true); });
 }
 
 function toast(msg,bad){
