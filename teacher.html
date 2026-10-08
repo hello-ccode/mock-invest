@@ -65,7 +65,7 @@ input,select{font:inherit;color:inherit}
   position:sticky;top:0;z-index:40;background:var(--paper);
   border-bottom:1px solid var(--line);
 }
-.top .wrap{display:flex;align-items:center;gap:16px;height:58px}
+.top .wrap{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;min-height:58px;padding-top:8px;padding-bottom:8px}
 .brand{font-family:"Gowun Batang",serif;font-size:1.16rem;font-weight:700;white-space:nowrap}
 .brand span{color:var(--navy)}
 .roundchip{
@@ -278,6 +278,17 @@ input,select{font:inherit;color:inherit}
 .quotes h5{font-size:.74rem;color:var(--ink-faint);letter-spacing:.04em;margin:0 0 5px;font-weight:600}
 .quotes p{font-family:"Gowun Batang",serif;font-size:.93rem;color:var(--ink-soft);padding:1px 0}
 
+/* 교실 화면(TV) */
+.pres{text-align:center;padding:34px 20px}
+.pres-big{font-family:"Gowun Batang",serif;font-size:2.2rem;font-weight:700}
+.pres-sub{color:var(--ink-soft);margin-top:8px;font-size:1.05rem}
+.cogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.co{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
+.co h4{font-size:1.05rem}
+.co h4 span{font-size:.78rem;color:var(--ink-faint);font-weight:500;margin-left:3px}
+.co .tag{display:inline-block;margin:4px 0 8px;font-size:.78rem;font-weight:700;color:var(--navy);background:var(--navy-wash);border-radius:4px;padding:.12em .5em}
+.co ul{padding-left:1.05em;display:flex;flex-direction:column;gap:3px;font-size:.9rem;color:var(--ink-soft)}
+
 /* login */
 .login{max-width:380px;margin:14vh auto 0;display:flex;flex-direction:column;gap:10px}
 .login h2{font-family:"Gowun Batang",serif;font-size:1.7rem}
@@ -368,12 +379,18 @@ input,select{font:inherit;color:inherit}
 <script src="config.js"></script>
 <script>
 /* ============================ 게임 데이터 ============================ */
+// tag·pts: 회사별 투자 기준. 학생 화면(index.html)과 수업 PPT에도 같은 내용이 있다. 고치면 함께 고친다.
 const STOCKS = [
-  {k:"FOOD", nm:"한입식품",   sec:"식품",        p0:10000, desc:"라면과 과자를 만든다. 경기가 나빠도 사람은 먹는다."},
-  {k:"LOGI", nm:"달려라택배", sec:"물류",        p0: 8000, desc:"온라인 주문이 늘면 같이 는다. 기름값에 민감하다."},
-  {k:"MED",  nm:"해맑은병원", sec:"헬스케어",    p0:12000, desc:"건강검진 센터를 운영한다. 꾸준하지만 크게 튀지 않는다."},
-  {k:"GAME", nm:"픽셀게임즈", sec:"게임",        p0:15000, desc:"신작 하나에 회사가 걸려 있다. 흥하면 크게, 망하면 크게."},
-  {k:"EV",   nm:"번쩍모빌리티",sec:"전기차·배터리",p0:20000, desc:"아직 돈은 못 벌지만 미래를 판다. 가장 크게 오르내린다."},
+  {k:"FOOD", nm:"한입식품",   sec:"식품",        p0:10000, desc:"라면과 과자를 만든다. 경기가 나빠도 사람은 먹는다.",
+   tag:"경기 방어주", pts:["경기가 나빠도 사람은 먹는다 — 불황에도 잘 버틴다","밀 같은 원재료 값이 오르면 이익이 줄어든다","신제품 인기·해외 수출은 좋은 소식","주가가 크게 오르내리지 않는다"]},
+  {k:"LOGI", nm:"달려라택배", sec:"물류",        p0: 8000, desc:"온라인 주문이 늘면 같이 는다. 기름값에 민감하다.",
+   tag:"소비 연동주", pts:["온라인 쇼핑·명절로 물건이 많이 오가면 이익이 는다","기름값이 오르면 비용이 늘어난다","배송료 인하는 당장 손해, 손님이 늘면 나중에 이익","사람들이 지갑을 닫으면(소비 위축) 같이 줄어든다"]},
+  {k:"MED",  nm:"해맑은병원", sec:"헬스케어",    p0:12000, desc:"건강검진 센터를 운영한다. 꾸준하지만 크게 튀지 않는다.",
+   tag:"꾸준한 방어주", pts:["경기와 상관없이 건강검진 수요는 꾸준하다","새 센터 같은 큰 투자는 당장 비용, 손님이 차면 이익","정부의 헬스케어 지원 정책에 영향을 받는다","크게 튀지 않는다"]},
+  {k:"GAME", nm:"픽셀게임즈", sec:"게임",        p0:15000, desc:"신작 하나에 회사가 걸려 있다. 흥하면 크게, 망하면 크게.",
+   tag:"흥행 의존주", pts:["신작 하나의 흥행에 회사가 걸려 있다","대표 교체·출시 연기는 나쁜 소식","게임 산업 전체 분위기에도 영향을 받는다","흥하면 크게 오르고, 망하면 크게 떨어진다"]},
+  {k:"EV",   nm:"번쩍모빌리티",sec:"전기차·배터리",p0:20000, desc:"아직 돈은 못 벌지만 미래를 판다. 가장 크게 오르내린다.",
+   tag:"성장주 · 변동 가장 큼", pts:["아직 돈은 못 벌지만 미래 기대로 값이 매겨진다","금리가 오르면 크게 흔들린다","정부 보조금 정책에 민감하다","공장 같은 큰 투자는 결과가 나오기까지 시간이 걸린다"]},
 ];
 const SK = STOCKS.map(s=>s.k);
 const SNAME = Object.fromEntries(STOCKS.map(s=>[s.k,s.nm]));
@@ -454,7 +471,10 @@ const MEETING_AFTER = 4;
 const VAGUE = ["그냥","느낌","감으로","감이","몰라","모르","아무","찍","랜덤","때려"];
 
 /* ============================ 상태 ============================ */
-let S = null, store = null, selected = null, openStock = null, toastT = null, snapshot = null, peek = false, joined = {};
+let S = null, store = null, selected = null, openStock = null, toastT = null, peek = false, joined = {};
+// 교실 화면: TV에 띄워도 되는 정보(시세·뉴스·결과)만 보여 준다. 학생별 금액·수익률은 관리 화면에서만 보인다.
+let present = true, rankShown = false;
+try{ present = localStorage.getItem("hb_present") !== "0"; }catch(e){}
 
 // 학생의 score는 퀴즈 정답 수다.
 // 시드머니 = 기본 50만 원 + 정답 수에 비례한 금액. 다 맞히면 100만 원(10문제면 정답 1개에 5만 원).
@@ -643,19 +663,22 @@ function topBar(){
              <button class="tbtn" data-a="exp3">피드백 CSV</button>
              <button class="tbtn" data-a="back">거래 화면으로</button>`;
   }
+  // 교실 화면에서는 TV에 띄워도 되는 버튼만 둔다. 이자 지급·초기화·로그아웃은 관리 화면에 있다.
   return `<div class="top"><div class="wrap">
     <div class="brand">한빛<span>증권</span></div>
     <span class="roundchip">${S.phase==="debrief"? "최종" : `R${S.round} / 8`}</span>
     <span class="phasechip">${ph}</span>${prac}
+    ${present? "" : `<span class="phasechip" style="color:var(--rise);border-color:var(--rise)">관리 화면 · 학생 정보가 보입니다</span>`}
     <div class="spacer"></div>
     ${S.phase==="play" && !S.revealed && !S.practice && S.round===1 && !S.history.length
       ? `<button class="tbtn" data-a="practice">${"연습 라운드"}</button>`:""}
-    ${S.practice? `<button class="tbtn" data-a="pracend">연습 종료 · 계좌 복구</button>`:""}
+    ${S.practice? `<button class="tbtn" data-a="pracend">연습 종료 · 처음으로 되돌리기</button>`:""}
     <button class="tbtn" data-a="qr">학생 접속 QR</button>
     <span class="phasechip">접속 ${S.students.filter(s=>joined[s.id]).length}/${S.students.length}</span>
-    ${S.phase!=="debrief"? `<button class="tbtn" data-a="interest">이자 일괄 지급 5%</button>`:""}
-    <button class="tbtn" data-a="reset">전체 초기화</button>
-    <button class="tbtn" data-a="logout">로그아웃</button>
+    ${!present && S.phase!=="debrief"? `<button class="tbtn" data-a="interest">이자 일괄 지급 5%</button>`:""}
+    ${present? "" : `<button class="tbtn" data-a="reset">전체 초기화</button>
+    <button class="tbtn" data-a="logout">로그아웃</button>`}
+    <button class="tbtn" data-a="present">${present? "관리 화면으로" : "교실 화면으로"}</button>
     ${right}
   </div></div>`;
 }
@@ -711,13 +734,37 @@ function viewSetup(){
 }
 
 /* ---------- 거래 ---------- */
-function viewPlay(){
+function freeNewsHTML(){
   const R = curRound();
-  const free = `<div class="newsbar ${R.shock?"shock":""}">
+  return `<div class="newsbar ${R.shock?"shock":""}">
       <span class="lbl">${R.shock?"속보":"무료"}</span>
       <div><div class="tx">${esc(R.free.tx)}</div>
       <div class="sub">${R.shock? esc(R.free.sub) : `${esc(R.free.who)} · 이미 주가에 반영되어 있습니다. 보고 사면 늦습니다.`}</div></div>
     </div>`;
+}
+const companiesHTML = () => `<div class="cogrid">${STOCKS.map(s=>`
+  <div class="co"><h4>${s.nm} <span>${s.sec}</span></h4><p class="tag">${s.tag}</p>
+    <ul>${s.pts.map(p=>`<li>${p}</li>`).join("")}</ul></div>`).join("")}</div>`;
+
+// 교실 화면(TV용): 시세·뉴스·결과·회사 정보만 보여 준다. 학생별 금액과 수익률은 싣지 않는다.
+function viewPlayPublic(){
+  const R = curRound();
+  const on = S.students.filter(s=>joined[s.id]).length;
+  const wait = `<div class="card"><div class="bd pres">
+      <p class="pres-big">${S.practice? "연습 라운드 · " : ""}휴대폰으로 주문하세요</p>
+      <p class="pres-sub">라운드 ${S.round} / 8 · 접속 ${on}/${S.students.length}명 ·
+        ${R.paid.length? `정보 ${R.paid.length}건 판매 중 (한 사람이 라운드당 1건)` : "이번 라운드는 정보를 팔지 않습니다"}</p></div></div>`;
+  return freeNewsHTML() + `<div style="display:flex;flex-direction:column;gap:18px;padding-bottom:60px">
+    ${S.revealed? revealCard() : wait}
+    <div class="card"><header><h3>회사별 투자 기준</h3>
+      <span style="font-size:.82rem;color:var(--ink-faint)">뉴스가 나오면 어느 회사에 좋은 소식인지 따져 보세요</span></header>
+      <div class="bd">${companiesHTML()}</div></div>
+  </div>`;
+}
+
+function viewPlay(){
+  if(present) return viewPlayPublic();
+  const free = freeNewsHTML();
 
   const cards = S.students.map(st=>{
     const r = retPct(st,S.prices);
@@ -956,14 +1003,26 @@ function viewDebrief(){
       </div></div>`;
   }).join("");
 
-  return `<div style="padding:24px 0 70px;display:flex;flex-direction:column;gap:20px">
-    <div class="card"><header><h3>수익률 순위</h3>
+  const rankCard = `<div class="card"><header><h3>수익률 순위</h3>
       <span style="font-size:.82rem;color:var(--ink-faint)">시드머니가 달라도 %로 비교하므로 공정합니다 — 짧게 지나가세요</span></header>
-      <div class="bd"><div class="rank">${rows}</div></div></div>
-
-    <div class="card"><header><h3>전체 비교</h3></header><div class="bd">${cmp}
+      <div class="bd"><div class="rank">${rows}</div></div></div>`;
+  const cmpCard = `<div class="card"><header><h3>전체 비교</h3></header><div class="bd">${cmp}
       <p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px">
-        표본이 7명이라 평균은 흔들립니다. 숫자를 결론으로 읽지 말고 <strong>"왜 그렇게 나왔을까"</strong>를 묻는 재료로 쓰세요.</p></div></div>
+        표본이 ${S.students.length}명이라 평균은 흔들립니다. 숫자를 결론으로 읽지 말고 <strong>"왜 그렇게 나왔을까"</strong>를 묻는 재료로 쓰세요.</p></div></div>`;
+
+  // 교실 화면: 전체 비교만 띄운다. 순위는 교사가 누를 때만, 개인 피드백은 학생 휴대폰에만 보인다.
+  if(present) return `<div style="padding:24px 0 70px;display:flex;flex-direction:column;gap:20px">
+    ${cmpCard}
+    ${rankShown? rankCard : `<div class="card"><div class="bd" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+      <span style="color:var(--ink-soft)">개인별 피드백은 각자 휴대폰에서 봅니다. 순위는 필요할 때만 잠깐 보여 주세요.</span>
+      <button class="tbtn" data-a="rank">순위 보기</button></div></div>`}
+    ${rankShown? `<div style="text-align:right"><button class="tbtn" data-a="rank">순위 가리기</button></div>` : ""}
+  </div>`;
+
+  return `<div style="padding:24px 0 70px;display:flex;flex-direction:column;gap:20px">
+    ${rankCard}
+
+    ${cmpCard}
 
     <div class="card"><header><h3>개인별 피드백 카드</h3>
       <span style="font-size:.82rem;color:var(--ink-faint)">순위가 아니라 판단 습관 — 1등부터 읽지 마세요</span></header>
@@ -1041,21 +1100,22 @@ function bindSetup(){
     if(a==="qbank") return showBank();
     if(a==="add"){ S.students.push(freshStudent(uid(), "", 0)); commit(); }
     if(a==="del"){ S.students.splice(+b.closest(".srow").dataset.i,1); commit(); }
-    if(a==="start"){
-      const named = S.students.filter(s=>s.name);
-      if(!named.length){ toast("학생 이름을 입력하세요."); return; }
-      const blank = S.students.length - named.length;
-      S.students = named;
-      // 지난 수업의 접속 기록·대기 주문·비공개 정보를 모두 지우고 새로 연다.
-      PB("orders").remove(); PB("msg").remove(); PB("joined").remove(); PB("private").remove();
-      PB("quiz").remove(); detachQuiz(); quizOpen = false;
-      if(QZ){ QZ.applied = true; saveQuiz(); }
-      joined = {};
-      S.phase="play"; selected=S.students[0].id; commit();
-      toast(`${named.length}명으로 개장했습니다.` + (blank? ` (이름이 빈 ${blank}칸 제외)` : ""));
-    }
+    if(a==="start") openMarket();
   };
   setupCount();
+}
+function openMarket(){
+  const named = S.students.filter(s=>s.name);
+  if(!named.length){ toast("학생 이름을 입력하세요."); return; }
+  const blank = S.students.length - named.length;
+  S.students = named;
+  // 지난 수업의 접속 기록·대기 주문·비공개 정보를 모두 지우고 새로 연다.
+  PB("orders").remove(); PB("msg").remove(); PB("joined").remove(); PB("private").remove();
+  PB("quiz").remove(); detachQuiz(); quizOpen = false;
+  if(QZ){ QZ.applied = true; saveQuiz(); }
+  joined = {};
+  S.phase="play"; selected=S.students[0].id; commit();
+  toast(`${named.length}명으로 개장했습니다.` + (blank? ` (이름이 빈 ${blank}칸 제외)` : ""));
 }
 
 // 화면에 실제로 보이는 입력값만이 진실이다. 상태는 여기서 만들어진다.
@@ -1102,6 +1162,10 @@ function bindMain(){
     if(a==="pracend") return endPractice();
     if(a==="qr") return showQR();
     if(a==="logout") return doLogout();
+    if(a==="present"){ present = !present; rankShown = false;
+      try{ localStorage.setItem("hb_present", present? "1" : "0"); }catch(e){}
+      render(); return; }
+    if(a==="rank"){ rankShown = !rankShown; render(); return; }
     if(a==="exp1") return exportSummary();
     if(a==="exp2") return exportTrades();
     if(a==="exp3") return exportFeedback();
@@ -1222,14 +1286,24 @@ function applyMeeting(){
   S.meeting.done = true; S.phase="play"; S.round++; S.revealed=false; commit();
 }
 
+// 연습을 시작하기 직전의 게임 상태(라운드·주가·결과 기록·계좌)를 통째로 저장해 두고, 연습이 끝나면 그대로 되돌린다.
+// 교사 전용 상태에 같이 저장하므로 연습 중에 새로고침해도 저장본이 남는다.
+const PRACTICE_KEYS = ["phase","round","revealed","students","prices","prev","history","meeting","vol"];
 function startPractice(){
-  snapshot = JSON.parse(JSON.stringify(S.students));
+  S.practiceSnap = JSON.parse(JSON.stringify(Object.fromEntries(PRACTICE_KEYS.map(k=>[k, S[k]]))));
   S.practice = true; toast("연습 라운드 — 거래해도 기록에 남지 않습니다."); commit();
 }
 function endPractice(){
-  if(snapshot) S.students = snapshot;
-  snapshot=null; S.practice=false; selected = S.students[0]?.id ?? null;
-  toast("계좌를 복구했습니다. 본게임을 시작하세요."); commit();
+  const snap = S.practiceSnap;
+  if(snap){
+    PRACTICE_KEYS.forEach(k=>{ S[k] = snap[k]; });
+    S.revealed = !!snap.revealed; S.vol = snap.vol || null;   // Firebase는 false·null·빈 배열을 지우므로 되살린다
+    normalize(S);
+  }
+  delete S.practiceSnap; S.practice = false;
+  PB("private").remove();   // 연습 때 산 정보가 학생 화면에 남지 않게 지운다
+  selected = S.students[0]?.id ?? null; openStock = null; peek = false;
+  toast("연습 전 상태(라운드·주가·계좌)로 되돌렸습니다. 본게임을 시작하세요."); commit();
 }
 
 function confirmReset(){
@@ -1626,7 +1700,8 @@ function viewQuiz(){
   return `<div class="wrap"><div class="qz">
     <div class="qz-hd"><h2>퀴즈 끝!</h2><div class="spacer"></div>
       <button class="tbtn" data-a="qnew">새 퀴즈 열기</button>
-      <button class="tbtn primary qz-big" data-a="qback">계좌 개설로 →</button></div>
+      <button class="tbtn" data-a="qback" title="학생별 정답 수가 보입니다. TV를 끄고 확인하세요.">명단 확인</button>
+      <button class="tbtn primary qz-big" data-a="qopen">바로 개장 →</button></div>
     <div class="card"><div class="bd">
       <p style="font-size:1.4rem;font-weight:700">${ps.length}명 참여 · 평균 ${avg.toFixed(1)}개 정답 <span style="color:var(--ink-faint);font-weight:500">(${asked}문제)</span></p>
       <p style="color:var(--ink-soft);margin-top:4px">이름과 정답 수를 계좌 개설 화면에 넣었습니다. 시드머니는 기본 ${won(SEED_BASE)}원 + 정답 1개당 ${won(perCorrect(n))}원.</p>
@@ -1656,6 +1731,7 @@ function bindQuiz(){
     if(a==="qnext") return nextQuestion();
     if(a==="qend") return endQuizEarly();
     if(a==="qnew") return confirmNewQuiz();
+    if(a==="qopen") return openMarket();
   };
 }
 // 시간 바와 남은 초는 화면을 다시 그리지 않고 매 프레임 서버 시각으로 계산해 고친다.

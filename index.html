@@ -119,6 +119,11 @@ section{margin-top:14px}
 .ncard .tx{font-family:"Gowun Batang",serif;font-size:1.02rem;line-height:1.5}
 .ncard .who{font-size:.76rem;color:var(--ink-faint);margin-top:3px}
 .secret{font-size:.76rem;color:var(--ink-faint);text-align:center;padding:4px 0}
+.ibtn{width:100%;display:grid;grid-template-columns:1fr auto auto;gap:9px;align-items:center;padding:12px 15px;text-align:left}
+.ibtn:active{background:var(--surface)}
+.ibtn .nm{font-weight:600}
+.ibtn .ar{font-size:.7rem;color:var(--ink-faint)}
+.pts{margin:0;padding:0 15px 13px 32px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--ink-soft)}
 
 /* login */
 .login{padding:46px 0}
@@ -201,12 +206,13 @@ section{margin-top:14px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="config.js"></script>
 <script>
+// tag·pts: 회사별 투자 기준. 선생님 화면(teacher.html)·수업 PPT와 같은 내용이다. 고치면 함께 고친다.
 const STOCKS=[
-  {k:"FOOD",nm:"한입식품",sec:"식품"},
-  {k:"LOGI",nm:"달려라택배",sec:"물류"},
-  {k:"MED", nm:"해맑은병원",sec:"헬스케어"},
-  {k:"GAME",nm:"픽셀게임즈",sec:"게임"},
-  {k:"EV",  nm:"번쩍모빌리티",sec:"전기차·배터리"},
+  {k:"FOOD",nm:"한입식품",sec:"식품", tag:"경기 방어주", pts:["경기가 나빠도 사람은 먹는다 — 불황에도 잘 버틴다","밀 같은 원재료 값이 오르면 이익이 줄어든다","신제품 인기·해외 수출은 좋은 소식","주가가 크게 오르내리지 않는다"]},
+  {k:"LOGI",nm:"달려라택배",sec:"물류", tag:"소비 연동주", pts:["온라인 쇼핑·명절로 물건이 많이 오가면 이익이 는다","기름값이 오르면 비용이 늘어난다","배송료 인하는 당장 손해, 손님이 늘면 나중에 이익","사람들이 지갑을 닫으면(소비 위축) 같이 줄어든다"]},
+  {k:"MED", nm:"해맑은병원",sec:"헬스케어", tag:"꾸준한 방어주", pts:["경기와 상관없이 건강검진 수요는 꾸준하다","새 센터 같은 큰 투자는 당장 비용, 손님이 차면 이익","정부의 헬스케어 지원 정책에 영향을 받는다","크게 튀지 않는다"]},
+  {k:"GAME",nm:"픽셀게임즈",sec:"게임", tag:"흥행 의존주", pts:["신작 하나의 흥행에 회사가 걸려 있다","대표 교체·출시 연기는 나쁜 소식","게임 산업 전체 분위기에도 영향을 받는다","흥하면 크게 오르고, 망하면 크게 떨어진다"]},
+  {k:"EV",  nm:"번쩍모빌리티",sec:"전기차·배터리", tag:"성장주 · 변동 가장 큼", pts:["아직 돈은 못 벌지만 미래 기대로 값이 매겨진다","금리가 오르면 크게 흔들린다","정부 보조금 정책에 민감하다","공장 같은 큰 투자는 결과가 나오기까지 시간이 걸린다"]},
 ];
 const SK=STOCKS.map(s=>s.k), SNAME=Object.fromEntries(STOCKS.map(s=>[s.k,s.nm]));
 const TIERS={
@@ -231,7 +237,7 @@ const R=p=>DB.ref(`pub/${TOKEN}/${p}`);
 // 같은 탭에서 #코드만 다른 새 QR 주소를 열면 페이지를 다시 읽지 않는다. 코드가 바뀌면 새로 연다.
 window.addEventListener("hashchange", ()=>location.reload());
 
-let ST=null, loaded=false, MY=null, mine=[], FBK=null, openK=null, qty=10, reason="", toastT=null, sending=false;
+let ST=null, loaded=false, MY=null, mine=[], FBK=null, openK=null, infoK=null, qty=10, reason="", toastT=null, sending=false;
 let loginName="", loginErr="", showList=false;
 try{ MY=localStorage.getItem("hb_sid"); }catch(e){}
 
@@ -487,7 +493,7 @@ function viewMain(){
     const on=openK===s.k&&open;
     return `<div class="srow">
       <button class="sbtn" data-a="open" data-k="${s.k}" ${open?"":"disabled"}>
-        <span><span class="nm">${s.nm}</span><br><span class="sub">${s.sec}</span></span>
+        <span><span class="nm">${s.nm}</span><br><span class="sub">${s.sec} · ${s.tag}</span></span>
         <span><span class="px">${won(cur)}</span><br><span class="dt ${cls(d)}">${d===0?"보합":`${sgn(pct)}${pct.toFixed(1)}%`}</span></span>
         <span class="qt ${q>0?"has":""}">${q>0?q+"주":"—"}</span>
       </button>
@@ -570,6 +576,11 @@ function viewMain(){
       <div class="tx">${esc(f.tx)}</div>
       <div class="sub">${esc(f.sub||"모두가 보는 뉴스입니다. 이미 주가에 반영되어 있어요.")}</div></div></section>`:""}
     <section><div class="card"><h3>시세 · 주문</h3>${rows}</div></section>
+    <section><div class="card"><h3>회사별 투자 기준 · 눌러서 보기</h3>${STOCKS.map(s=>`
+      <div class="srow"><button class="ibtn" data-a="info" data-k="${s.k}">
+        <span class="nm">${s.nm}</span><span class="pill t-disc">${s.tag}</span><span class="ar">${infoK===s.k?"▲":"▼"}</span></button>
+        ${infoK===s.k? `<ul class="pts">${s.pts.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}</div>`).join("")}
+    </div></section>
     <section><div class="card"><h3>내 보유</h3><div class="hold">${holds}</div></div></section>
     <section><div class="card"><h3>정보 구매 · 라운드당 1건</h3>${shop}</div></section>
     <section><div class="card"><h3>내가 산 정보</h3>${news}</div></section>
@@ -593,6 +604,7 @@ function bind(){
     if(a==="out"){ try{localStorage.removeItem("hb_sid");}catch(e){} MY=null; mine=[]; FBK=null; watchNews();
       loginName=""; loginErr=""; showList=false; draw(); return; }
     if(a==="open"){ openK=openK===b.dataset.k?null:b.dataset.k; qty=10; reason=""; draw(); return; }
+    if(a==="info"){ infoK=infoK===b.dataset.k?null:b.dataset.k; draw(); return; }
     if(a==="q"){ qty=Math.max(0,qty+(+b.dataset.v)); draw(); return; }
     if(a==="qs"){ qty=+b.dataset.v; draw(); return; }
     if(a==="qmax"){ qty=Math.floor(m.cash/((ST.prices[b.dataset.k]||1)*(1+FEE))); draw(); return; }
